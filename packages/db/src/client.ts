@@ -1,9 +1,10 @@
 import { Database } from 'bun:sqlite';
 import { sql } from 'drizzle-orm';
-import { drizzle, type BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from './schema/index.js';
+import type { DatabaseClient } from './database-client.js';
 
-export type DatabaseClient = BunSQLiteDatabase<typeof schema>;
+export type { DatabaseClient } from './database-client.js';
 
 export function createDatabase(dbPath: string): DatabaseClient {
   const sqlite = new Database(dbPath, { create: true });

@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./query": "./src/query/index.ts",
+    "./repositories": "./src/repositories/index.ts",
+    "./test-utils": "./src/test-utils.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

@@ -1,0 +1,37 @@
+{
+  "politics": {
+    "categories": ["Politics", "Elections"],
+    "seriesPrefixes": ["KXPRES", "KXGOV", "KXELECT"],
+    "keywords": []
+  },
+  "weather": {
+    "categories": ["Climate and Weather"],
+    "seriesPrefixes": ["KXHIGH", "KXLOW", "KXRAIN"],
+    "keywords": []
+  },
+  "economics": {
+    "categories": ["Economics", "Financials"],
+    "seriesPrefixes": [],
+    "keywords": ["GDP", "CPI", "Fed", "unemployment"]
+  },
+  "technology": {
+    "categories": ["Science and Technology"],
+    "seriesPrefixes": [],
+    "keywords": ["AI", "Apple", "Google", "OpenAI"]
+  },
+  "crypto": {
+    "categories": ["Crypto"],
+    "seriesPrefixes": [],
+    "keywords": ["Bitcoin", "Ethereum", "BTC", "ETH"]
+  },
+  "entertainment": {
+    "categories": ["Entertainment"],
+    "seriesPrefixes": [],
+    "keywords": ["Oscar", "Grammy", "box office"]
+  },
+  "sports": {
+    "categories": ["Sports"],
+    "seriesPrefixes": [],
+    "keywords": []
+  }
+}

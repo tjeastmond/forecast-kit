@@ -12,6 +12,7 @@
   "dependencies": {
     "@forcast-kit/core": "workspace:*",
     "@forcast-kit/db": "workspace:*",
+    "@forcast-kit/provider-kalshi": "workspace:*",
     "fastify": "^5.3.3"
   }
 }

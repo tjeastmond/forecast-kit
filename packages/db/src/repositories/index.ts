@@ -5,9 +5,10 @@ import type {
   ProviderId,
   SyncRunStatus,
 } from '@forcast-kit/core';
+import type { Focus } from '@forcast-kit/core';
 import { eq } from 'drizzle-orm';
-import { events, marketSides, markets, syncRuns } from '../schema/index.js';
-import type { DatabaseClient } from '../client.js';
+import { events, marketFocusTags, marketSides, markets, syncRuns } from '../schema/index.js';
+import type { DatabaseClient } from '../database-client.js';
 
 function isoNow(): string {
   return new Date().toISOString();
@@ -133,6 +134,25 @@ export class MarketSideRepository {
   }
 }
 
+export class MarketFocusTagRepository {
+  constructor(private readonly _db: DatabaseClient) {}
+
+  async replaceTags(marketId: number, tags: readonly Focus[]): Promise<void> {
+    await this._db.delete(marketFocusTags).where(eq(marketFocusTags.marketId, marketId));
+
+    if (tags.length === 0) {
+      return;
+    }
+
+    await this._db.insert(marketFocusTags).values(
+      tags.map((focus) => ({
+        marketId,
+        focus,
+      })),
+    );
+  }
+}
+
 export interface FinishSyncRunInput {
   readonly status: SyncRunStatus;
   readonly eventsUpserted: number;
@@ -183,6 +203,7 @@ export function createRepositories(db: DatabaseClient) {
     events: new EventRepository(db),
     markets: new MarketRepository(db),
     marketSides: new MarketSideRepository(db),
+    marketFocusTags: new MarketFocusTagRepository(db),
     syncRuns: new SyncRunRepository(db),
   };
 }

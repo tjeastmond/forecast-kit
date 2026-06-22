@@ -13,3 +13,12 @@ export function parseFocusList(value: string | undefined): Focus[] {
 export function isFocus(value: string): value is Focus {
   return FOCUS_VALUES.includes(value as Focus);
 }
+
+export {
+  deriveFocusTags,
+  matchesFocusFilter,
+  shouldPersistMarket,
+  type FocusFilterOptions,
+  type FocusRule,
+  type FocusRules,
+} from './rules.js';

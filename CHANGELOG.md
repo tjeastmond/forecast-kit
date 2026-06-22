@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-22
+
+### Added
+
+- **Phase 3 — Query & filter**
+  - Focus tagging rules (`rules.json`) with category, series prefix, and keyword matching
+  - Focus/exclude filtering on sync, `list`, and API endpoints
+  - `MarketQueryService` and `EventQueryService` with cursor pagination
+  - API: `GET /markets`, `GET /markets/:ticker`, `GET /events`, `GET /events/:eventTicker`
+  - API: `POST /sync`, `GET /sync/:id`
+  - CLI: `list` and `inspect` commands; Ink sync progress UI
+  - Integration tests for query layer and API market routes
+- **`AGENTS.md`** — agent handoff guide with scripts, directory structure, and architecture
+
 ## [0.2.0] - 2026-06-22
 
 ### Added

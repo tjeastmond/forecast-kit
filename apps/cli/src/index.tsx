@@ -4,6 +4,7 @@ import React from 'react';
 import { parseArgs } from './args.js';
 import { runCommand } from './commands/index.js';
 import { App } from './ui/App.jsx';
+import { SyncApp } from './ui/SyncApp.jsx';
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
@@ -15,6 +16,12 @@ async function main(): Promise<void> {
       process.stdout.write(`${result.message}\n`);
     }
     process.exit(result.exitCode);
+  }
+
+  if (args.command === 'sync') {
+    const { waitUntilExit } = render(<SyncApp args={args} />);
+    await waitUntilExit();
+    process.exit(0);
   }
 
   const result = await runCommand(args);
