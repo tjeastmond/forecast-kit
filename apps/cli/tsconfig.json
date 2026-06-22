@@ -8,5 +8,10 @@
     "lib": ["ES2022"]
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../api" }, { "path": "../../packages/core" }, { "path": "../../packages/db" }]
+  "references": [
+    { "path": "../api" },
+    { "path": "../../packages/core" },
+    { "path": "../../packages/db" },
+    { "path": "../../packages/providers/kalshi" }
+  ]
 }

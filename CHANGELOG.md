@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-22
+
+### Added
+
+- **Phase 2 — Kalshi sync**
+  - `KalshiProvider` with paginated `/events` fetch, Zod validation, retry/backoff, and rate-limit handling
+  - Kalshi → domain normalizer with binary YES/NO side derivation
+  - Drizzle repositories for events, markets, market sides, and sync runs (idempotent upserts)
+  - `SyncService` orchestrating provider fetch → DB persistence with audit trail
+  - CLI `sync kalshi` command wired end-to-end (`--max-pages` for dev/testing)
+  - Golden fixture and unit tests for normalizer, parse-decimal, repositories, and sync service
+
 ## [0.1.0] - 2026-06-22
 
 ### Added

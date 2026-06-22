@@ -70,6 +70,7 @@ export interface FetchOptions {
   readonly status?: 'open' | 'closed' | 'settled';
   readonly seriesTicker?: string;
   readonly minUpdatedTs?: number;
+  readonly maxPages?: number;
 }
 
 export interface ProviderEventBatch {

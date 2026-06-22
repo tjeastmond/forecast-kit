@@ -34,6 +34,7 @@
         "@forcast-kit/api": "workspace:*",
         "@forcast-kit/core": "workspace:*",
         "@forcast-kit/db": "workspace:*",
+        "@forcast-kit/provider-kalshi": "workspace:*",
         "ink": "^6.0.1",
         "react": "^19.1.0",
       },
@@ -55,12 +56,17 @@
         "@forcast-kit/core": "workspace:*",
         "drizzle-orm": "^0.44.2",
       },
+      "devDependencies": {
+        "@types/better-sqlite3": "^7.6.13",
+        "better-sqlite3": "^12.11.1",
+      },
     },
     "packages/providers/kalshi": {
       "name": "@forcast-kit/provider-kalshi",
       "version": "0.0.0",
       "dependencies": {
         "@forcast-kit/core": "workspace:*",
+        "zod": "^3.25.51",
       },
     },
     "packages/providers/polymarket": {

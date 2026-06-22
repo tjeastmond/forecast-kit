@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@forcast-kit/core": "workspace:*"
+    "@forcast-kit/core": "workspace:*",
+    "zod": "^3.25.51"
   }
 }

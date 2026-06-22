@@ -12,5 +12,9 @@
   "dependencies": {
     "@forcast-kit/core": "workspace:*",
     "drizzle-orm": "^0.44.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.11.1"
   }
 }
