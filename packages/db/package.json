@@ -1,0 +1,16 @@
+{
+  "name": "@forcast-kit/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@forcast-kit/core": "workspace:*",
+    "drizzle-orm": "^0.44.2"
+  }
+}

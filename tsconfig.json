@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/db" },
+    { "path": "./packages/providers/kalshi" },
+    { "path": "./packages/providers/polymarket" },
+    { "path": "./apps/api" },
+    { "path": "./apps/cli" }
+  ]
+}
