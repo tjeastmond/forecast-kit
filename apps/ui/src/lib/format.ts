@@ -34,3 +34,11 @@ export function formatSpread(value: number | null | undefined): string {
   }
   return `${(value * 100).toFixed(2)}¢`;
 }
+
+export function formatRawJsonForDisplay(rawJson: string): string {
+  try {
+    return JSON.stringify(JSON.parse(rawJson) as unknown, null, 2);
+  } catch {
+    return rawJson;
+  }
+}

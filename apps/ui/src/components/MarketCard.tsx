@@ -1,8 +1,10 @@
 'use client';
 
 import { memo } from 'react';
+import { CopyIdRow } from '@/components/CopyIdRow';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MarketSummary } from '@/lib/api';
+import { copyId } from '@/lib/copy-id';
 import { formatDate, formatPrice, marketDisplayTitle } from '@/lib/format';
 import { resolveImpliedProbability, resolveNoImpliedProbability, type MarketPayoutSortInput } from '@/lib/sort-markets';
 import { cn } from '@/lib/utils';
@@ -37,9 +39,20 @@ export const MarketCard = memo(function MarketCard({
       <CardHeader className="pointer-events-none relative z-10 space-y-0 py-4">
         <div className="min-w-0 space-y-1 text-left">
           <CardTitle>{displayTitle}</CardTitle>
-          <p className="text-muted-foreground text-sm">
-            {market.eventTicker} · {market.status}
-            {market.focusTags.length > 0 ? ` · ${market.focusTags.join(', ')}` : ''} · {formatDate(market.closeTime)}
+          <p className="text-muted-foreground flex flex-wrap items-center gap-x-1 text-sm">
+            <span className="pointer-events-auto relative z-20 inline-flex">
+              <CopyIdRow
+                id={market.ticker}
+                copyAriaLabel="Copy ID"
+                onCopy={(id) => {
+                  void copyId(id, 'Market ID');
+                }}
+              />
+            </span>
+            <span>
+              · {market.status}
+              {market.focusTags.length > 0 ? ` · ${market.focusTags.join(', ')}` : ''} · {formatDate(market.closeTime)}
+            </span>
           </p>
           <p className="text-sm tabular-nums">
             Last {formatPrice(market.lastPrice)}

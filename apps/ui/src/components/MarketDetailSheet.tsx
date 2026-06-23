@@ -1,25 +1,34 @@
 'use client';
 
-import { CopyIcon } from 'lucide-react';
 import { type MarketExportV1 } from '@/lib/constants';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { CopyIdRow } from '@/components/CopyIdRow';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetBody, SheetContent, SheetFooter, SheetHeader } from '@/components/ui/sheet';
 import { fetchMarketDetail, fetchMarketExport, getMarketExportUrl, type MarketDetail } from '@/lib/api';
-import { formatDate, formatNumber, formatPrice, formatSpread } from '@/lib/format';
+import { copyId } from '@/lib/copy-id';
+import { formatDate, formatNumber, formatPrice, formatRawJsonForDisplay, formatSpread } from '@/lib/format';
 
-function formatRawJsonForDisplay(rawJson: string): string {
-  try {
-    return JSON.stringify(JSON.parse(rawJson) as unknown, null, 2);
-  } catch {
-    return rawJson;
-  }
-}
-
-function ExportPreview({ exportData }: { exportData: MarketExportV1 }) {
+function ExportPreview({
+  exportData,
+  eventTicker,
+  onCopyId,
+}: {
+  exportData: MarketExportV1;
+  eventTicker: string;
+  onCopyId: (id: string, label: string) => void;
+}) {
   return (
     <div className="space-y-2 text-sm">
+      <CopyIdRow
+        id={eventTicker}
+        label="Event ID:"
+        copyAriaLabel="Copy Event ID"
+        onCopy={(id) => {
+          onCopyId(id, 'Event ID');
+        }}
+      />
       <p>
         <span className="text-muted-foreground">Implied:</span> {formatPrice(exportData.pricing.impliedProbability)}
       </p>
@@ -115,13 +124,8 @@ export function MarketDetailSheet({
 
   const formattedRawJson = useMemo(() => (detail ? formatRawJsonForDisplay(detail.rawJson) : ''), [detail]);
 
-  const copyTicker = useCallback(async (marketTicker: string) => {
-    try {
-      await navigator.clipboard.writeText(marketTicker);
-      toast.success('Market ID copied');
-    } catch {
-      toast.error('Failed to copy market ID');
-    }
+  const handleCopyId = useCallback((value: string, label: string) => {
+    void copyId(value, label);
   }, []);
 
   return (
@@ -134,20 +138,13 @@ export function MarketDetailSheet({
         <SheetHeader>
           <h2 className="text-base font-medium">{detail?.title ?? ticker ?? 'Market'}</h2>
           {ticker ? (
-            <div className="flex items-center gap-1">
-              <p className="text-muted-foreground font-mono text-xs">{ticker}</p>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground size-6"
-                aria-label="Copy ID"
-                onClick={() => {
-                  void copyTicker(ticker);
-                }}
-              >
-                <CopyIcon className="size-3.5" />
-              </Button>
-            </div>
+            <CopyIdRow
+              id={ticker}
+              copyAriaLabel="Copy ID"
+              onCopy={(id) => {
+                handleCopyId(id, 'Market ID');
+              }}
+            />
           ) : null}
         </SheetHeader>
         <SheetBody>
@@ -156,7 +153,15 @@ export function MarketDetailSheet({
             <div className="space-y-6">
               <section>
                 <h3 className="mb-2 font-medium">Agent Export Preview</h3>
-                {exportData ? <ExportPreview exportData={exportData} /> : null}
+                {exportData ? (
+                  <ExportPreview
+                    exportData={exportData}
+                    eventTicker={detail.eventTicker}
+                    onCopyId={(id, label) => {
+                      handleCopyId(id, label);
+                    }}
+                  />
+                ) : null}
               </section>
 
               <TimingLiquiditySection detail={detail} />
