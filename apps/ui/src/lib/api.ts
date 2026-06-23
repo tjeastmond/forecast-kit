@@ -1,6 +1,6 @@
 import type { Focus, MarketExportV1 } from '@/lib/constants';
 
-const API_BASE = process.env.NEXT_PUBLIC_FORCAST_KIT_API_URL ?? 'http://127.0.0.1:3847';
+const API_BASE = process.env.NEXT_PUBLIC_FORCAST_KIT_API_URL ?? '/api';
 
 export interface MarketSummary {
   readonly id: number;

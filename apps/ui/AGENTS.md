@@ -5,12 +5,12 @@ Local browser explorer at `http://127.0.0.1:3848`. Styled like applied.dev (Robo
 ## Dev
 
 ```bash
-bun run serve          # API on :3847 (required)
-bun run ui             # UI on :3848
-bun run dev:explore    # both (shell background)
+bun run serve          # API on :3847 only
+bun run ui             # API + UI (:3847 + :3848)
+bun run ui:app         # UI only (if API already running)
 ```
 
-Set `NEXT_PUBLIC_FORCAST_KIT_API_URL` if API is not on `http://127.0.0.1:3847`.
+Set `NEXT_PUBLIC_FORCAST_KIT_API_URL` only if bypassing the built-in `/api` proxy (direct cross-origin calls need CORS on the API).
 
 ## Patterns
 

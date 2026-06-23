@@ -13,9 +13,10 @@
   "scripts": {
     "dev": "bun run apps/cli/src/index.tsx",
     "serve": "bun run apps/api/src/index.ts",
-    "ui": "bun run --filter @forcast-kit/ui dev",
+    "ui:app": "bun run --filter @forcast-kit/ui dev",
+    "ui": "bun run serve & bun run ui:app",
     "ui:build": "bun run --filter @forcast-kit/ui build",
-    "dev:explore": "bun run serve & bun run ui",
+    "dev:explore": "bun run ui",
     "sync:kalshi": "bun run apps/cli/src/index.tsx sync kalshi --no-ui",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

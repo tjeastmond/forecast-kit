@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `bun run ui` now starts the API server and explorer UI together; use `bun run ui:app` for UI only
+- UI defaults to same-origin `/api` proxy (avoids CORS); API CORS preflight fixed via `@fastify/cors`
 - `Project_Plan.md` milestone checkboxes marked complete for Phases 1–5
 - Drizzle migration snapshot chain completed for `0001_add_market_stale`
 

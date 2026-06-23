@@ -5,6 +5,7 @@ import { createRepositories } from '@forcast-kit/db/repositories';
 import { createTestDatabase } from '@forcast-kit/db/test-utils';
 import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
+import { corsPlugin } from '../plugins/cors.js';
 import { marketRoutes } from './markets.js';
 
 const politicsMarket: NormalizedMarket = {
@@ -86,5 +87,24 @@ describe('API market routes', () => {
     expect(body.schemaVersion).toBe('1.0');
     expect(body.ticker).toBe('KXPRES-24-DEM');
     expect(body.pricing.impliedProbability).toBeCloseTo(0.41);
+  });
+
+  it('handles CORS preflight for UI origins', async () => {
+    const app = Fastify({ logger: false });
+    await app.register(corsPlugin);
+    await app.register(marketRoutes);
+
+    const response = await app.inject({
+      method: 'OPTIONS',
+      url: '/markets?limit=10',
+      headers: {
+        origin: 'http://localhost:3848',
+        'access-control-request-method': 'GET',
+        'access-control-request-headers': 'content-type',
+      },
+    });
+
+    expect(response.statusCode).toBe(204);
+    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:3848');
   });
 });

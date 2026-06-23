@@ -139,20 +139,21 @@ forcast-kit/
 
 Run all commands from the repo root with **Bun**.
 
-| Script        | Command                                              | Purpose                                  |
-| ------------- | ---------------------------------------------------- | ---------------------------------------- |
-| `dev`         | `bun run apps/cli/src/index.tsx`                     | Run CLI interactively (Ink UI)           |
-| `serve`       | `bun run apps/api/src/index.ts`                      | Start Fastify API on `127.0.0.1:3847`    |
-| `ui`          | `bun run --filter @forcast-kit/ui dev`               | Local explorer UI on `127.0.0.1:3848`    |
-| `dev:explore` | `bun run serve & bun run ui`                         | API + UI together                        |
-| `sync:kalshi` | `bun run apps/cli/src/index.tsx sync kalshi --no-ui` | Non-interactive Kalshi sync              |
-| `db:generate` | `drizzle-kit generate`                               | Generate migration from schema changes   |
-| `db:migrate`  | `drizzle-kit migrate`                                | Apply migrations (uses `better-sqlite3`) |
-| `lint`        | `eslint .`                                           | ESLint (strict TypeScript rules)         |
-| `format`      | `prettier --write .`                                 | Format entire repo                       |
-| `typecheck`   | `tsc --build`                                        | Project-reference TypeScript build       |
-| `test`        | `vitest run`                                         | Run all `**/*.spec.ts` tests once        |
-| `test:watch`  | `vitest`                                             | Watch mode for tests                     |
+| Script        | Command                                              | Purpose                                        |
+| ------------- | ---------------------------------------------------- | ---------------------------------------------- |
+| `dev`         | `bun run apps/cli/src/index.tsx`                     | Run CLI interactively (Ink UI)                 |
+| `serve`       | `bun run apps/api/src/index.ts`                      | Start Fastify API on `127.0.0.1:3847`          |
+| `ui`          | `bun run serve & bun run ui:app`                     | API + explorer UI (`127.0.0.1:3847` + `:3848`) |
+| `ui:app`      | `bun run --filter @forcast-kit/ui dev`               | Next.js UI only (API must already be running)  |
+| `dev:explore` | `bun run ui`                                         | Alias for `ui`                                 |
+| `sync:kalshi` | `bun run apps/cli/src/index.tsx sync kalshi --no-ui` | Non-interactive Kalshi sync                    |
+| `db:generate` | `drizzle-kit generate`                               | Generate migration from schema changes         |
+| `db:migrate`  | `drizzle-kit migrate`                                | Apply migrations (uses `better-sqlite3`)       |
+| `lint`        | `eslint .`                                           | ESLint (strict TypeScript rules)               |
+| `format`      | `prettier --write .`                                 | Format entire repo                             |
+| `typecheck`   | `tsc --build`                                        | Project-reference TypeScript build             |
+| `test`        | `vitest run`                                         | Run all `**/*.spec.ts` tests once              |
+| `test:watch`  | `vitest`                                             | Watch mode for tests                           |
 
 ### Typical verification loop
 
