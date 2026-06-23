@@ -22,7 +22,7 @@ export function Sheet({
     <div className="fixed inset-0 z-50">
       <button
         type="button"
-        aria-label="Close panel"
+        aria-label="Close Panel"
         className="absolute inset-0 bg-black/20 backdrop-blur-sm dark:bg-black/70"
         onClick={() => {
           onOpenChange(false);
@@ -49,7 +49,13 @@ export function SheetContent({
         className,
       )}
     >
-      <Button variant="ghost" size="icon" className="absolute top-3 right-3 z-10" onClick={onClose}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-3 right-3 z-10"
+        onClick={onClose}
+        aria-label="Close Panel"
+      >
         <XIcon className="size-4" />
       </Button>
       {children}

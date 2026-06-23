@@ -16,7 +16,7 @@ export function MarketCard({ market, onOpen }: { market: MarketSummary; onOpen: 
       <button
         type="button"
         className="absolute inset-0 z-0 rounded-xl focus-visible:ring-3 focus-visible:outline-none"
-        aria-label={`View details for ${market.title}`}
+        aria-label={`View Details for ${market.title}`}
         onClick={() => {
           onOpen(market.ticker);
         }}
@@ -32,7 +32,7 @@ export function MarketCard({ market, onOpen }: { market: MarketSummary; onOpen: 
             Last {formatPrice(market.lastPrice)}
             {market.isStale ? (
               <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-                stale
+                Stale
               </span>
             ) : null}
             <span className="text-muted-foreground ml-2 text-xs uppercase">kalshi</span>

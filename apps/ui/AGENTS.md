@@ -18,6 +18,7 @@ Set `NEXT_PUBLIC_FORCAST_KIT_API_URL` only if bypassing the built-in `/api` prox
 - **Event comparison** at `/events/[eventTicker]` with CSS implied-% bars.
 - **Edits** via admin API routes; sync dialog warns when sheet has unsaved edits.
 - Theme persisted in `localStorage` (`forcast-kit-theme`).
+- Static UI headings, buttons, form labels, and filter triggers use **Title Case** (see `.cursor/rules/ui-title-case.mdc`).
 
 ## Stack
 

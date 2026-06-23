@@ -76,6 +76,9 @@ export default function EventsPage() {
     };
   }, []);
 
+  const isInitialLoad = loading && events.length === 0;
+  const isPaginating = loading && events.length > 0;
+
   return (
     <AppShell
       onTitleClick={() => {
@@ -94,7 +97,9 @@ export default function EventsPage() {
       />
 
       <div className="mb-4 flex items-center justify-between gap-2">
-        <p className="text-muted-foreground text-sm">{loading ? 'Loading…' : `${String(events.length)} events`}</p>
+        <p className="text-muted-foreground text-sm">
+          {isInitialLoad ? 'Loading…' : `${String(events.length)} Events`}
+        </p>
         <div className="flex items-center gap-2">
           <select
             className="border-input h-8 rounded-lg border px-2 text-sm"
@@ -105,7 +110,7 @@ export default function EventsPage() {
           >
             {PAGE_SIZES.map((size) => (
               <option key={size} value={size}>
-                {size} / page
+                {size} / Page
               </option>
             ))}
           </select>
@@ -135,8 +140,8 @@ export default function EventsPage() {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {loading
+      <div className={isPaginating ? 'pointer-events-none space-y-4 opacity-60' : 'space-y-4'}>
+        {isInitialLoad
           ? [1, 2, 3].map((key) => <Card key={key} className="h-24 animate-pulse" />)
           : events.map((event) => (
               <EventCard

@@ -40,7 +40,7 @@ export function AppShell({
               size="icon"
               className="header-toolbar-outline"
               onClick={toggleTheme}
-              aria-label="Toggle theme"
+              aria-label="Toggle Theme"
               suppressHydrationWarning
             >
               <MoonIcon className="size-4 dark:hidden" />

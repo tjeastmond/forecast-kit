@@ -33,8 +33,8 @@ export function MarketFilters({
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   variant?: 'markets' | 'events';
 }) {
-  const searchPlaceholder = variant === 'events' ? 'Search events…' : 'Search markets…';
-  const searchAriaLabel = variant === 'events' ? 'Search events' : 'Search markets';
+  const searchPlaceholder = variant === 'events' ? 'Search Events…' : 'Search Markets…';
+  const searchAriaLabel = variant === 'events' ? 'Search Events' : 'Search Markets';
 
   return (
     <div className="mb-6 space-y-2">
@@ -78,7 +78,7 @@ export function MarketFilters({
             disabled={!hasActiveFilters}
             onClick={onClear}
             className={cn(hasActiveFilters && 'border-destructive/30 bg-red-50 text-white dark:bg-red-950/40')}
-            aria-label="Clear filters"
+            aria-label="Clear Filters"
           >
             <XIcon className={cn('size-4', hasActiveFilters ? 'text-red-600' : 'text-muted-foreground')} />
           </Button>
@@ -103,7 +103,7 @@ export function MarketFilters({
               onFiltersChange({ ...filters, staleOnly: event.target.checked });
             }}
           />
-          Stale only
+          Stale Only
         </label>
       </div>
       <hr className="border-border" />

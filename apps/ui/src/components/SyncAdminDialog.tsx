@@ -97,18 +97,18 @@ export function SyncAdminDialog({
       <button
         type="button"
         className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        aria-label="Close admin dialog"
+        aria-label="Close Admin Dialog"
         onClick={() => {
           onOpenChange(false);
         }}
       />
       <div className="bg-popover relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border p-6 shadow-2xl">
-        <h2 className="mb-4 text-lg font-medium">Sync & admin</h2>
+        <h2 className="mb-4 text-lg font-medium">Sync & Admin</h2>
         <p className="text-muted-foreground mb-4 text-sm">API: {getApiBaseUrl()}</p>
 
         <div className="space-y-3">
           <div>
-            <Label htmlFor="sync-focus">Focus (comma-separated)</Label>
+            <Label htmlFor="sync-focus">Focus (Comma-Separated)</Label>
             <Input
               id="sync-focus"
               value={focusText}
@@ -119,7 +119,7 @@ export function SyncAdminDialog({
             />
           </div>
           <div>
-            <Label htmlFor="sync-exclude">Exclude focus</Label>
+            <Label htmlFor="sync-exclude">Exclude Focus</Label>
             <Input
               id="sync-exclude"
               value={excludeText}
@@ -130,7 +130,7 @@ export function SyncAdminDialog({
             />
           </div>
           <div>
-            <Label htmlFor="sync-max-pages">Max pages</Label>
+            <Label htmlFor="sync-max-pages">Max Pages</Label>
             <Input
               id="sync-max-pages"
               value={maxPages}
@@ -140,13 +140,13 @@ export function SyncAdminDialog({
               placeholder="optional"
             />
           </div>
-          <Checkbox checked={full} onCheckedChange={setFull} label="Full sync (mark unseen stale)" />
+          <Checkbox checked={full} onCheckedChange={setFull} label="Full Sync (Mark Unseen Stale)" />
           <Button variant="save" onClick={() => void handleSync()} disabled={runningId !== null}>
-            {runningId !== null ? `Syncing (#${String(runningId)})…` : 'Start sync'}
+            {runningId !== null ? `Syncing (#${String(runningId)})…` : 'Start Sync'}
           </Button>
         </div>
 
-        <h3 className="mt-6 mb-2 font-medium">Recent sync runs</h3>
+        <h3 className="mt-6 mb-2 font-medium">Recent Sync Runs</h3>
         <table className="comparison-table">
           <thead>
             <tr>
@@ -194,7 +194,7 @@ export function SyncAdminButton({ hasUnsavedEdits }: { hasUnsavedEdits: boolean 
         onClick={() => {
           setOpen(true);
         }}
-        aria-label="Open admin dialog"
+        aria-label="Open Admin Dialog"
       >
         <SettingsIcon className="size-4" />
       </Button>

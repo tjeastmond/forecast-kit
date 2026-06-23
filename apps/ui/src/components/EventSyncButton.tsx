@@ -68,7 +68,7 @@ export function EventSyncButton({
       disabled={runningId !== null}
     >
       <RefreshCwIcon className={`mr-1.5 size-4 ${runningId !== null ? 'animate-spin' : ''}`} />
-      {runningId !== null ? 'Syncing…' : 'Sync event'}
+      {runningId !== null ? 'Syncing…' : 'Sync Event'}
     </Button>
   );
 }

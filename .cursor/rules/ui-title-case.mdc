@@ -1,0 +1,27 @@
+---
+description: Title Case for explorer UI headings, buttons, and form labels
+globs: apps/ui/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# UI Title Case
+
+Use **Title Case** for all static user-facing **headings** (`h1`–`h3`, dialog titles, section titles), **button labels**, **form labels** (`Label`, checkbox labels), **filter trigger labels** (`emptyLabel`), and **icon-button `aria-label`s**.
+
+## Rules
+
+- Capitalize the first and last word.
+- Capitalize major words; lowercase articles (`a`, `an`, `the`), conjunctions (`and`, `or`, `but`), and short prepositions (`in`, `on`, `at`, `to`, `for`) unless they are the first word — except keep prepositions capitalized when they are part of a fixed control name (e.g. `Filter By Focus`).
+- Use `&` and `/` as in the source phrase (`Sync & Admin`, `Timing & Liquidity`).
+- **Do not** title-case: API/data values, placeholders with examples (`politics,weather`), toast sentences, empty-state body copy, or dynamic content from the server.
+
+## Examples
+
+| ❌ Avoid | ✅ Prefer |
+| -------- | --------- |
+| `Sync event` | `Sync Event` |
+| `Clear filters` | `Clear Filters` |
+| `Agent export preview` | `Agent Export Preview` |
+| `Yes bid` | `Yes Bid` |
+| `Mark as stale` | `Mark As Stale` |
+| `Open admin dialog` | `Open Admin Dialog` |

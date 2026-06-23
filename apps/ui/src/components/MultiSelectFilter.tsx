@@ -61,7 +61,7 @@ export function MultiSelectFilter<T extends string>({
           <button
             type="button"
             className="fixed inset-0 z-40"
-            aria-label="Close filter menu"
+            aria-label="Close Filter Menu"
             onClick={() => {
               setOpen(false);
             }}

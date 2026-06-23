@@ -192,7 +192,7 @@ export function MarketDetailSheet({
           {!loading && detail ? (
             <div className="space-y-6">
               <section>
-                <h3 className="mb-2 font-medium">Agent export preview</h3>
+                <h3 className="mb-2 font-medium">Agent Export Preview</h3>
                 {exportData ? <ExportPreview exportData={exportData} /> : null}
                 {ticker ? (
                   <a
@@ -201,7 +201,7 @@ export function MarketDetailSheet({
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Open export JSON
+                    Open Export JSON
                   </a>
                 ) : null}
               </section>
@@ -231,7 +231,7 @@ export function MarketDetailSheet({
               </section>
 
               <section>
-                <h3 className="mb-2 font-medium">Timing & liquidity</h3>
+                <h3 className="mb-2 font-medium">Timing & Liquidity</h3>
                 <div className="text-sm space-y-1">
                   <p>
                     Open {formatDate(detail.openTime)} · Close {formatDate(detail.closeTime)}
@@ -250,7 +250,7 @@ export function MarketDetailSheet({
 
               <section>
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="font-medium">Edit fields</h3>
+                  <h3 className="font-medium">Edit Fields</h3>
                   <Button
                     variant="outline"
                     size="default"
@@ -258,7 +258,7 @@ export function MarketDetailSheet({
                       setEditMode((current) => !current);
                     }}
                   >
-                    {editMode ? 'Hide editor' : 'Edit'}
+                    {editMode ? 'Hide Editor' : 'Edit'}
                   </Button>
                 </div>
                 {editMode ? (
@@ -296,7 +296,7 @@ export function MarketDetailSheet({
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label htmlFor="yesBid">Yes bid</Label>
+                        <Label htmlFor="yesBid">Yes Bid</Label>
                         <Input
                           id="yesBid"
                           value={yesBid}
@@ -306,7 +306,7 @@ export function MarketDetailSheet({
                         />
                       </div>
                       <div>
-                        <Label htmlFor="yesAsk">Yes ask</Label>
+                        <Label htmlFor="yesAsk">Yes Ask</Label>
                         <Input
                           id="yesAsk"
                           value={yesAsk}
@@ -316,7 +316,7 @@ export function MarketDetailSheet({
                         />
                       </div>
                       <div>
-                        <Label htmlFor="noBid">No bid</Label>
+                        <Label htmlFor="noBid">No Bid</Label>
                         <Input
                           id="noBid"
                           value={noBid}
@@ -326,7 +326,7 @@ export function MarketDetailSheet({
                         />
                       </div>
                       <div>
-                        <Label htmlFor="noAsk">No ask</Label>
+                        <Label htmlFor="noAsk">No Ask</Label>
                         <Input
                           id="noAsk"
                           value={noAsk}
@@ -336,7 +336,7 @@ export function MarketDetailSheet({
                         />
                       </div>
                       <div>
-                        <Label htmlFor="lastPrice">Last price</Label>
+                        <Label htmlFor="lastPrice">Last Price</Label>
                         <Input
                           id="lastPrice"
                           value={lastPrice}
@@ -346,14 +346,14 @@ export function MarketDetailSheet({
                         />
                       </div>
                     </div>
-                    <Checkbox checked={isStale} onCheckedChange={setIsStale} label="Mark as stale" />
+                    <Checkbox checked={isStale} onCheckedChange={setIsStale} label="Mark As Stale" />
                     <div>
-                      <Label>Focus tags</Label>
+                      <Label>Focus Tags</Label>
                       <MultiSelectFilter
                         items={FOCUS_VALUES.map((focus) => ({ value: focus, label: focus }))}
                         selected={focusTags}
                         onSelectedChange={setFocusTags}
-                        emptyLabel="Select focus tags"
+                        emptyLabel="Select Focus Tags"
                         pluralNoun="tags"
                       />
                     </div>
@@ -377,7 +377,7 @@ export function MarketDetailSheet({
                     setShowRawJson((current) => !current);
                   }}
                 >
-                  {showRawJson ? 'Hide raw JSON' : 'Show raw JSON'}
+                  {showRawJson ? 'Hide Raw JSON' : 'Show Raw JSON'}
                 </button>
                 {showRawJson ? (
                   <pre className="bg-muted mt-2 overflow-x-auto rounded-lg p-3 text-xs">{detail.rawJson}</pre>
