@@ -37,6 +37,7 @@ export default tseslint.config(
       'prettier.config.js',
       'drizzle.config.ts',
       'vitest.config.ts',
+      'scripts/**',
     ],
   },
 );

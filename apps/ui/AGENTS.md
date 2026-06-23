@@ -6,7 +6,7 @@ Local browser explorer at `http://127.0.0.1:3848`. Styled like applied.dev (Robo
 
 ```bash
 bun run serve          # API on :3847 only
-bun run ui             # API + UI (:3847 + :3848)
+bun run ui             # clean .next, API + UI (:3847 + :3848); stops both on SIGTERM/SIGINT
 bun run ui:app         # UI only (if API already running)
 ```
 
