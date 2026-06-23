@@ -58,6 +58,7 @@ export const markets = sqliteTable(
     lastPrice: real('last_price'),
     rulesPrimary: text('rules_primary'),
     rulesSecondary: text('rules_secondary'),
+    seriesTagsJson: text('series_tags_json').notNull().default('[]'),
     rawJson: text('raw_json').notNull(),
     createdAt: text('created_at')
       .notNull()
@@ -130,8 +131,71 @@ export const syncRuns = sqliteTable('sync_runs', {
   errorSummary: text('error_summary'),
 });
 
+export const providerCategories = sqliteTable(
+  'provider_categories',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    provider: text('provider').notNull(),
+    category: text('category').notNull(),
+    syncedAt: text('synced_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [uniqueIndex('provider_categories_provider_category_unique').on(table.provider, table.category)],
+);
+
+export const providerCategoryTags = sqliteTable(
+  'provider_category_tags',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    provider: text('provider').notNull(),
+    category: text('category').notNull(),
+    tag: text('tag').notNull(),
+    syncedAt: text('synced_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    uniqueIndex('provider_category_tags_provider_category_tag_unique').on(table.provider, table.category, table.tag),
+    index('provider_category_tags_tag_idx').on(table.tag),
+  ],
+);
+
+export const providerSeries = sqliteTable(
+  'provider_series',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    provider: text('provider').notNull(),
+    seriesTicker: text('series_ticker').notNull(),
+    category: text('category').notNull(),
+    title: text('title').notNull(),
+    tagsJson: text('tags_json').notNull().default('[]'),
+    lastUpdatedTs: text('last_updated_ts'),
+    rawJson: text('raw_json').notNull(),
+    syncedAt: text('synced_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    uniqueIndex('provider_series_provider_series_ticker_unique').on(table.provider, table.seriesTicker),
+    index('provider_series_category_idx').on(table.category),
+  ],
+);
+
+export const syncState = sqliteTable('sync_state', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: text('updated_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
 export type EventRow = typeof events.$inferSelect;
 export type MarketRow = typeof markets.$inferSelect;
 export type MarketSideRow = typeof marketSides.$inferSelect;
 export type MarketFocusTagRow = typeof marketFocusTags.$inferSelect;
 export type SyncRunRow = typeof syncRuns.$inferSelect;
+export type ProviderCategoryRow = typeof providerCategories.$inferSelect;
+export type ProviderCategoryTagRow = typeof providerCategoryTags.$inferSelect;
+export type ProviderSeriesRow = typeof providerSeries.$inferSelect;
+export type SyncStateRow = typeof syncState.$inferSelect;

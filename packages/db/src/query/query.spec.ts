@@ -1,5 +1,5 @@
-import { deriveFocusTags } from '@forcast-kit/core';
-import type { NormalizedMarket } from '@forcast-kit/core';
+import { deriveFocusTags } from '@forecast-kit/core';
+import type { NormalizedMarket } from '@forecast-kit/core';
 import { describe, expect, it } from 'vitest';
 import { createQueryServices } from '../query/index.js';
 import { createRepositories } from '../repositories/index.js';

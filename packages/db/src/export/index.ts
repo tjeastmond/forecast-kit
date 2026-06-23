@@ -1,4 +1,4 @@
-import { buildMarketExport } from '@forcast-kit/core';
+import { buildMarketExport } from '@forecast-kit/core';
 import type { MarketDetail } from '../query/index.js';
 
 export function marketDetailToExport(market: MarketDetail) {

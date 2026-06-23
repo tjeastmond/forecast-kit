@@ -4,10 +4,20 @@ import type {
   NormalizedMarketSide,
   ProviderId,
   SyncRunStatus,
-} from '@forcast-kit/core';
-import type { Focus } from '@forcast-kit/core';
-import { and, eq, notInArray, or, desc } from 'drizzle-orm';
-import { events, marketFocusTags, marketSides, markets, syncRuns } from '../schema/index.js';
+} from '@forecast-kit/core';
+import type { Focus } from '@forecast-kit/core';
+import { and, eq, isNotNull, notInArray, or, desc } from 'drizzle-orm';
+import {
+  events,
+  marketFocusTags,
+  marketSides,
+  markets,
+  providerCategories,
+  providerCategoryTags,
+  providerSeries,
+  syncRuns,
+  syncState,
+} from '../schema/index.js';
 import type { DatabaseClient } from '../database-client.js';
 
 function isoNow(): string {
@@ -57,7 +67,7 @@ export class EventRepository {
 export class MarketRepository {
   constructor(private readonly _db: DatabaseClient) {}
 
-  async upsert(market: NormalizedMarket): Promise<number> {
+  async upsert(market: NormalizedMarket, options?: { seriesTags?: readonly string[] }): Promise<number> {
     const now = isoNow();
     const values = {
       provider: market.provider,
@@ -84,6 +94,7 @@ export class MarketRepository {
       lastPrice: market.lastPrice,
       rulesPrimary: market.rulesPrimary,
       rulesSecondary: market.rulesSecondary,
+      seriesTagsJson: JSON.stringify(options?.seriesTags ?? []),
       rawJson: JSON.stringify(market.rawJson),
       updatedAt: now,
       lastSeenAt: now,
@@ -277,6 +288,235 @@ export class SyncRunRepository {
   }
 }
 
+export class SyncStateRepository {
+  constructor(private readonly _db: DatabaseClient) {}
+
+  async get(key: string): Promise<string | null> {
+    const [row] = await this._db.select().from(syncState).where(eq(syncState.key, key)).limit(1);
+    return row?.value ?? null;
+  }
+
+  async set(key: string, value: string): Promise<void> {
+    const now = isoNow();
+    await this._db
+      .insert(syncState)
+      .values({ key, value, updatedAt: now })
+      .onConflictDoUpdate({
+        target: syncState.key,
+        set: { value, updatedAt: now },
+      });
+  }
+}
+
+export interface CategoryWithTags {
+  readonly category: string;
+  readonly tags: readonly string[];
+}
+
+export class TaxonomyRepository {
+  constructor(private readonly _db: DatabaseClient) {}
+
+  async replaceCategoriesAndTags(provider: ProviderId, categories: readonly CategoryWithTags[]): Promise<void> {
+    await this._db.delete(providerCategoryTags).where(eq(providerCategoryTags.provider, provider));
+    await this._db.delete(providerCategories).where(eq(providerCategories.provider, provider));
+
+    const now = isoNow();
+    if (categories.length === 0) {
+      return;
+    }
+
+    await this._db.insert(providerCategories).values(
+      categories.map((entry) => ({
+        provider,
+        category: entry.category,
+        syncedAt: now,
+      })),
+    );
+
+    const tagRows = categories.flatMap((entry) =>
+      entry.tags.map((tag) => ({
+        provider,
+        category: entry.category,
+        tag,
+        syncedAt: now,
+      })),
+    );
+
+    if (tagRows.length > 0) {
+      await this._db.insert(providerCategoryTags).values(tagRows);
+    }
+  }
+
+  async upsertSeries(
+    provider: ProviderId,
+    rows: readonly {
+      seriesTicker: string;
+      category: string;
+      title: string;
+      tags: readonly string[];
+      lastUpdatedTs: string | null;
+      rawJson: unknown;
+    }[],
+  ): Promise<number> {
+    const now = isoNow();
+    let count = 0;
+
+    for (const row of rows) {
+      await this._db
+        .insert(providerSeries)
+        .values({
+          provider,
+          seriesTicker: row.seriesTicker,
+          category: row.category,
+          title: row.title,
+          tagsJson: JSON.stringify(row.tags),
+          lastUpdatedTs: row.lastUpdatedTs,
+          rawJson: JSON.stringify(row.rawJson),
+          syncedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: [providerSeries.provider, providerSeries.seriesTicker],
+          set: {
+            category: row.category,
+            title: row.title,
+            tagsJson: JSON.stringify(row.tags),
+            lastUpdatedTs: row.lastUpdatedTs,
+            rawJson: JSON.stringify(row.rawJson),
+            syncedAt: now,
+          },
+        });
+      count += 1;
+    }
+
+    return count;
+  }
+
+  async loadSeriesMap(provider: ProviderId): Promise<Map<string, { category: string; tags: string[] }>> {
+    const rows = await this._db.select().from(providerSeries).where(eq(providerSeries.provider, provider));
+    const map = new Map<string, { category: string; tags: string[] }>();
+
+    for (const row of rows) {
+      let tags: string[] = [];
+      try {
+        const parsed: unknown = JSON.parse(row.tagsJson);
+        if (Array.isArray(parsed)) {
+          tags = parsed.filter((value): value is string => typeof value === 'string');
+        }
+      } catch {
+        tags = [];
+      }
+      map.set(row.seriesTicker, { category: row.category, tags });
+    }
+
+    return map;
+  }
+
+  async listCategories(provider: ProviderId): Promise<CategoryWithTags[]> {
+    const categoryRows = await this._db
+      .select()
+      .from(providerCategories)
+      .where(eq(providerCategories.provider, provider))
+      .orderBy(providerCategories.category);
+
+    const tagRows = await this._db
+      .select()
+      .from(providerCategoryTags)
+      .where(eq(providerCategoryTags.provider, provider));
+
+    const tagsByCategory = new Map<string, string[]>();
+    for (const row of tagRows) {
+      const existing = tagsByCategory.get(row.category) ?? [];
+      existing.push(row.tag);
+      tagsByCategory.set(row.category, existing);
+    }
+
+    return categoryRows.map((row) => ({
+      category: row.category,
+      tags: tagsByCategory.get(row.category) ?? [],
+    }));
+  }
+
+  async listSeries(
+    provider: ProviderId,
+    options?: { category?: string; limit?: number },
+  ): Promise<
+    readonly {
+      seriesTicker: string;
+      category: string;
+      title: string;
+      tags: readonly string[];
+      lastUpdatedTs: string | null;
+    }[]
+  > {
+    const limit = options?.limit ?? 50;
+    const whereParts = [eq(providerSeries.provider, provider)];
+    if (options?.category) {
+      whereParts.push(eq(providerSeries.category, options.category));
+    }
+
+    const rows = await this._db
+      .select()
+      .from(providerSeries)
+      .where(and(...whereParts))
+      .orderBy(providerSeries.seriesTicker)
+      .limit(limit);
+
+    return rows.map((row) => {
+      let tags: string[] = [];
+      try {
+        const parsed: unknown = JSON.parse(row.tagsJson);
+        if (Array.isArray(parsed)) {
+          tags = parsed.filter((value): value is string => typeof value === 'string');
+        }
+      } catch {
+        tags = [];
+      }
+
+      return {
+        seriesTicker: row.seriesTicker,
+        category: row.category,
+        title: row.title,
+        tags,
+        lastUpdatedTs: row.lastUpdatedTs,
+      };
+    });
+  }
+
+  async listSeriesTickersByCategory(provider: ProviderId, category: string): Promise<string[]> {
+    const rows = await this._db
+      .select({ seriesTicker: providerSeries.seriesTicker })
+      .from(providerSeries)
+      .where(and(eq(providerSeries.provider, provider), eq(providerSeries.category, category)));
+
+    return [...new Set(rows.map((row) => row.seriesTicker))].sort();
+  }
+
+  async listFallbackCategoriesFromEvents(provider: ProviderId): Promise<CategoryWithTags[]> {
+    const rows = await this._db
+      .selectDistinct({ category: events.category })
+      .from(events)
+      .where(and(eq(events.provider, provider), isNotNull(events.category)));
+
+    return rows
+      .flatMap((row) => (row.category ? [{ category: row.category, tags: [] as string[] }] : []))
+      .sort((left, right) => left.category.localeCompare(right.category));
+  }
+
+  async listAllTags(provider: ProviderId): Promise<string[]> {
+    const tagRows = await this._db
+      .select({ tag: providerCategoryTags.tag })
+      .from(providerCategoryTags)
+      .where(eq(providerCategoryTags.provider, provider));
+
+    const tags = new Set(tagRows.map((row) => row.tag));
+    return [...tags].sort((left, right) => left.localeCompare(right));
+  }
+
+  async getSyncedAt(provider: ProviderId): Promise<string | null> {
+    return new SyncStateRepository(this._db).get(`${provider}:taxonomy_synced_at`);
+  }
+}
+
 export function createRepositories(db: DatabaseClient) {
   return {
     events: new EventRepository(db),
@@ -284,6 +524,8 @@ export function createRepositories(db: DatabaseClient) {
     marketSides: new MarketSideRepository(db),
     marketFocusTags: new MarketFocusTagRepository(db),
     syncRuns: new SyncRunRepository(db),
+    syncState: new SyncStateRepository(db),
+    taxonomy: new TaxonomyRepository(db),
   };
 }
 

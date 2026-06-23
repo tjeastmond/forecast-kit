@@ -1,6 +1,13 @@
-import type { Focus, PredictionMarketProvider, ProviderEventBatch, SyncRunStatus } from '@forcast-kit/core';
-import { deriveFocusTags, logger, shouldPersistMarket, type FocusFilterOptions } from '@forcast-kit/core';
+import type {
+  Focus,
+  PredictionMarketProvider,
+  ProviderEventBatch,
+  SeriesMetadata,
+  SyncRunStatus,
+} from '@forecast-kit/core';
+import { deriveFocusTags, logger, shouldPersistMarket, type FocusFilterOptions } from '@forecast-kit/core';
 import type { Repositories } from '../repositories/index.js';
+import type { TaxonomySyncService, TaxonomySyncResult } from '../taxonomy/service.js';
 
 export interface SyncOptions {
   readonly focus?: readonly Focus[];
@@ -27,8 +34,22 @@ interface BatchUpsertState {
   seenMarketIds: Set<number>;
 }
 
+/** Kalshi mention events often ship with stale last_updated_ts and are skipped by min_updated_ts sync. */
+const MENTIONS_DISCOVERY_SERIES = [
+  'KXTRUMPMENTION',
+  'KXTRUMPSAY',
+  'KXMENTION',
+  'KXPOLITICSMENTION',
+  'KXWCMENTION',
+] as const;
+
 export class SyncService {
-  constructor(private readonly repos: Repositories) {}
+  private seriesMetadataMap: Map<string, SeriesMetadata> = new Map();
+
+  constructor(
+    private readonly repos: Repositories,
+    private readonly taxonomy?: TaxonomySyncService,
+  ) {}
 
   async syncProvider(provider: PredictionMarketProvider, options?: SyncOptions): Promise<SyncResult> {
     const focusFilterJson =
@@ -102,6 +123,7 @@ export class SyncService {
     };
 
     try {
+      await this.refreshTaxonomyIfAvailable();
       const batch = await provider.fetchEvent(eventTicker);
       if (!batch) {
         const message = `Event not found: ${eventTicker}`;
@@ -170,6 +192,29 @@ export class SyncService {
     }
   }
 
+  async syncTaxonomy(options?: { full?: boolean }): Promise<TaxonomySyncResult | null> {
+    if (!this.taxonomy) {
+      return null;
+    }
+    const result = await this.taxonomy.syncKalshiTaxonomy({
+      ...(options?.full === true ? { full: true } : {}),
+    });
+    this.seriesMetadataMap = await this.taxonomy.loadSeriesMetadataMap();
+    return result;
+  }
+
+  private async refreshTaxonomyIfAvailable(): Promise<void> {
+    if (!this.taxonomy) {
+      return;
+    }
+    await this.taxonomy.syncKalshiTaxonomy();
+    this.seriesMetadataMap = await this.taxonomy.loadSeriesMetadataMap();
+  }
+
+  private resolveSeriesMetadata(seriesTicker: string): SeriesMetadata | undefined {
+    return this.seriesMetadataMap.get(seriesTicker);
+  }
+
   private async executeSync(
     syncRunId: number,
     provider: PredictionMarketProvider,
@@ -206,12 +251,18 @@ export class SyncService {
     };
 
     try {
+      await this.refreshTaxonomyIfAvailable();
+
       for await (const batch of provider.fetchOpenEvents({
         status: resolvedOptions.status ?? 'open',
         ...(resolvedOptions.minUpdatedTs !== undefined ? { minUpdatedTs: resolvedOptions.minUpdatedTs } : {}),
         ...(resolvedOptions.maxPages !== undefined ? { maxPages: resolvedOptions.maxPages } : {}),
       })) {
         await this.upsertBatch(batch, filterOptions, { skipFocusFilter: false }, state);
+      }
+
+      if (resolvedOptions.full !== true && resolvedOptions.minUpdatedTs !== undefined) {
+        await this.syncMentionsDiscoveryPass(provider, resolvedOptions, filterOptions, state);
       }
 
       const status: SyncRunStatus = state.errorsCount > 0 ? 'partial' : 'success';
@@ -264,6 +315,32 @@ export class SyncService {
     }
   }
 
+  private async syncMentionsDiscoveryPass(
+    provider: PredictionMarketProvider,
+    resolvedOptions: SyncOptions,
+    filterOptions: FocusFilterOptions,
+    state: BatchUpsertState,
+  ): Promise<void> {
+    const seriesTickers = [...MENTIONS_DISCOVERY_SERIES];
+
+    logger.info({
+      component: 'sync',
+      provider: provider.id,
+      msg: 'mentions discovery pass',
+      seriesCount: seriesTickers.length,
+    });
+
+    for (const seriesTicker of seriesTickers) {
+      for await (const batch of provider.fetchOpenEvents({
+        status: resolvedOptions.status ?? 'open',
+        seriesTicker,
+        maxPages: 5,
+      })) {
+        await this.upsertBatch(batch, filterOptions, { skipFocusFilter: false }, state);
+      }
+    }
+  }
+
   private async upsertBatch(
     batch: ProviderEventBatch,
     filterOptions: FocusFilterOptions,
@@ -276,7 +353,8 @@ export class SyncService {
       let eventPersisted = false;
 
       for (const market of eventMarkets) {
-        const focusTags = deriveFocusTags(market);
+        const seriesMetadata = this.resolveSeriesMetadata(market.seriesTicker);
+        const focusTags = deriveFocusTags(market, { ...(seriesMetadata ? { seriesMetadata } : {}) });
         if (!options.skipFocusFilter && !shouldPersistMarket(market, focusTags, filterOptions)) {
           continue;
         }
@@ -288,7 +366,9 @@ export class SyncService {
             eventPersisted = true;
           }
 
-          const marketId = await this.repos.markets.upsert(market);
+          const marketId = await this.repos.markets.upsert(market, {
+            seriesTags: seriesMetadata?.tags ?? [],
+          });
           await this.repos.marketFocusTags.replaceTags(marketId, focusTags);
           marketIdByTicker.set(market.ticker, marketId);
           state.seenMarketIds.add(marketId);
@@ -326,6 +406,6 @@ export class SyncService {
   }
 }
 
-export function createSyncService(repos: Repositories): SyncService {
-  return new SyncService(repos);
+export function createSyncService(repos: Repositories, taxonomy?: TaxonomySyncService): SyncService {
+  return new SyncService(repos, taxonomy);
 }

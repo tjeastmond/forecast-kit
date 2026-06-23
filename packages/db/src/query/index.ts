@@ -1,6 +1,6 @@
-import type { Focus } from '@forcast-kit/core';
-import { deriveMarketMetrics } from '@forcast-kit/core';
-import { and, asc, desc, eq, gt, inArray, like, lt, notInArray, or } from 'drizzle-orm';
+import type { Focus } from '@forecast-kit/core';
+import { deriveMarketMetrics } from '@forecast-kit/core';
+import { and, asc, desc, eq, gt, inArray, like, lt, notInArray, or, sql } from 'drizzle-orm';
 import type { DatabaseClient } from '../database-client.js';
 import { events, marketFocusTags, marketSides, markets, syncRuns } from '../schema/index.js';
 import type { MarketRow, SyncRunRow } from '../schema/index.js';
@@ -10,6 +10,8 @@ export type { SyncRunRow };
 export interface MarketListOptions {
   readonly focus?: readonly Focus[];
   readonly exclude?: readonly Focus[];
+  readonly category?: string;
+  readonly tag?: string;
   readonly status?: string;
   readonly stale?: boolean;
   readonly q?: string;
@@ -23,6 +25,7 @@ export interface MarketSummary {
   readonly ticker: string;
   readonly eventTicker: string;
   readonly title: string;
+  readonly subtitle: string;
   readonly status: string;
   readonly closeTime: string;
   readonly category: string | null;
@@ -100,12 +103,20 @@ export class MarketQueryService {
   constructor(private readonly _db: DatabaseClient) {}
 
   async getEventTickersMatchingFilter(
-    options: Pick<MarketListOptions, 'focus' | 'exclude' | 'status' | 'stale'>,
+    options: Pick<MarketListOptions, 'focus' | 'exclude' | 'category' | 'tag' | 'status' | 'stale'>,
   ): Promise<string[]> {
     const whereParts = [];
 
     if (options.status) {
       whereParts.push(eq(markets.status, options.status));
+    }
+    if (options.category) {
+      whereParts.push(eq(markets.category, options.category));
+    }
+    if (options.tag) {
+      whereParts.push(
+        sql`EXISTS (SELECT 1 FROM json_each(${markets.seriesTagsJson}) WHERE json_each.value = ${options.tag})`,
+      );
     }
     if (options.stale !== undefined) {
       whereParts.push(eq(markets.isStale, options.stale));
@@ -154,6 +165,14 @@ export class MarketQueryService {
     }
     if (options.eventTicker) {
       whereParts.push(eq(markets.eventTicker, options.eventTicker));
+    }
+    if (options.category) {
+      whereParts.push(eq(markets.category, options.category));
+    }
+    if (options.tag) {
+      whereParts.push(
+        sql`EXISTS (SELECT 1 FROM json_each(${markets.seriesTagsJson}) WHERE json_each.value = ${options.tag})`,
+      );
     }
     if (options.q) {
       const pattern = `%${options.q}%`;
@@ -209,6 +228,7 @@ export class MarketQueryService {
       ticker: row.ticker,
       eventTicker: row.eventTicker,
       title: row.title,
+      subtitle: row.subtitle,
       status: row.status,
       closeTime: row.closeTime,
       category: row.category,
@@ -250,6 +270,8 @@ export class MarketQueryService {
 export interface EventListOptions {
   readonly focus?: readonly Focus[];
   readonly exclude?: readonly Focus[];
+  readonly category?: string;
+  readonly tag?: string;
   readonly status?: string;
   readonly stale?: boolean;
   readonly q?: string;
@@ -277,11 +299,20 @@ export class EventQueryService {
       }
     }
 
-    if (options.focus?.length || options.exclude?.length || options.status || options.stale !== undefined) {
+    if (
+      options.focus?.length ||
+      options.exclude?.length ||
+      options.category ||
+      options.tag ||
+      options.status ||
+      options.stale !== undefined
+    ) {
       const marketQuery = new MarketQueryService(this._db);
       const eventTickers = await marketQuery.getEventTickersMatchingFilter({
         ...(options.focus !== undefined ? { focus: options.focus } : {}),
         ...(options.exclude !== undefined ? { exclude: options.exclude } : {}),
+        ...(options.category !== undefined ? { category: options.category } : {}),
+        ...(options.tag !== undefined ? { tag: options.tag } : {}),
         ...(options.status !== undefined ? { status: options.status } : {}),
         ...(options.stale !== undefined ? { stale: options.stale } : {}),
       });
@@ -312,6 +343,8 @@ export class EventQueryService {
           eventTicker: event.eventTicker,
           ...(options.focus !== undefined ? { focus: options.focus } : {}),
           ...(options.exclude !== undefined ? { exclude: options.exclude } : {}),
+          ...(options.category !== undefined ? { category: options.category } : {}),
+          ...(options.tag !== undefined ? { tag: options.tag } : {}),
           ...(options.status !== undefined ? { status: options.status } : {}),
           ...(options.stale !== undefined ? { stale: options.stale } : {}),
           limit: MAX_LIMIT,

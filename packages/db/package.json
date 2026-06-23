@@ -1,5 +1,5 @@
 {
-  "name": "@forcast-kit/db",
+  "name": "@forecast-kit/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./query": "./src/query/index.ts",
     "./repositories": "./src/repositories/index.ts",
+    "./taxonomy": "./src/taxonomy/service.ts",
     "./test-utils": "./src/test-utils.ts",
     "./export": "./src/export/index.ts"
   },
@@ -14,7 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@forcast-kit/core": "workspace:*",
+    "@forecast-kit/core": "workspace:*",
     "drizzle-orm": "^0.44.2"
   },
   "devDependencies": {

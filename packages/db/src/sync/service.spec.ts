@@ -4,7 +4,7 @@ import type {
   NormalizedMarketSide,
   PredictionMarketProvider,
   ProviderEventBatch,
-} from '@forcast-kit/core';
+} from '@forecast-kit/core';
 import { count, eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import { createRepositories } from '../repositories/index.js';

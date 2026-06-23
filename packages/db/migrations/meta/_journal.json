@@ -15,6 +15,13 @@
       "when": 1782168000000,
       "tag": "0001_add_market_stale",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1782169000000,
+      "tag": "0002_add_kalshi_taxonomy",
+      "breakpoints": true
     }
   ]
 }
