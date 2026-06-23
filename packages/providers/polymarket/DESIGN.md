@@ -1,6 +1,6 @@
 # Polymarket field mapping (design)
 
-Phase 5 stub — documents how Polymarket API responses will map into forcast-kit domain models when implementation begins.
+Phase 5 stub — documents how Polymarket API responses will map into forecast-kit domain models when implementation begins.
 
 ## Provider identity
 

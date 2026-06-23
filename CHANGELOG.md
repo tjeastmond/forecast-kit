@@ -11,8 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Kalshi taxonomy sync: `GET /search/tags_by_categories` and `GET /series` fetched into SQLite (`provider_categories`, `provider_category_tags`, `provider_series`); refreshed at the start of each market sync and via `POST /sync/taxonomy`
+- `GET /taxonomy` and `GET /taxonomy/series` read APIs for dynamic category/tag dropdowns
+- Market and event list filters: `?category=` and `?tag=` (CLI: `--category`, `--tag`)
+- Research focus labels `politicians` and `mentions` with series-prefix/keyword rules
+- Scheduled refresh recipe (external cron): `POST /sync/taxonomy` then `POST /sync` every 6h
 - `POST /events/:eventTicker/sync` to refresh a single event and its markets from Kalshi
 - Event detail page sync button and events-first explorer navigation (events → markets → detail sheet)
+- Kalshi market `yes_sub_title` mapped to `subtitle` for short per-outcome labels (e.g. mention markets)
 - CLI `--full` flag for full sync with stale-market marking (parity with `POST /sync`)
 - CLI `events` command to list events and show event detail with filtered markets
 - CLI sync resolves providers via `ProviderRegistry` (same pattern as API)
@@ -22,12 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Incremental sync missed live Kalshi mention markets (e.g. `KXTRUMPMENTION-26JUN23`) when Kalshi reports a stale `last_updated_ts`; incremental runs now include a targeted Mentions series discovery pass
+- `mentions` focus rules now match Kalshi category `Mentions` and series prefixes such as `KXTRUMPMENTION` (not only `KXMENTION`)
 - Focus keyword matching uses word boundaries so `AI` no longer false-positives on "Chair"
 - Kalshi sync accepts settlement sources with missing or empty `name` fields
 
 ### Changed
 
-- Events list uses full explorer filters (focus, status, stale) and cursor pagination; `/markets` redirects to `/events` and the markets nav tab is removed
+- Focus derivation uses synced Kalshi series metadata (`category`, `tags`) instead of hardcoded category strings in `rules.json`
+- Events list uses full explorer filters (focus, category, tag, status, stale) and cursor pagination; `/markets` redirects to `/events` and the markets nav tab is removed
 - Explorer shell content width increased 25% (`60rem`)
 - Explorer default route and nav prioritize `/events`; event detail shows market cards instead of comparison table
 - `bun run ui` now starts the API server and explorer UI together; use `bun run ui:app` for UI only

@@ -1,4 +1,4 @@
-# forcast-kit
+# forecast-kit
 
 ## Goal
 
@@ -42,7 +42,7 @@ The MVP is complete when the [First Success Criteria](#first-success-criteria) c
 ## Repository Structure
 
 ```txt
-forcast-kit/
+forecast-kit/
   apps/
     cli/                  # Ink TUI + command router
       src/
@@ -109,7 +109,7 @@ SQLite (Drizzle)
 Future Research Agent
 ```
 
-forcast-kit is responsible for:
+forecast-kit is responsible for:
 
 - Fetching and paginating market data
 - Normalizing provider-specific field names and types
@@ -117,7 +117,7 @@ forcast-kit is responsible for:
 - Tagging focus categories
 - Serving filtered, agent-ready data locally
 
-Research and prediction logic live outside forcast-kit.
+Research and prediction logic live outside forecast-kit.
 
 ---
 
@@ -127,9 +127,9 @@ Environment variables (see `.env.example`):
 
 | Variable                  | Required | Default                                        | Purpose                                                                                                           |
 | ------------------------- | -------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `FORCAST_KIT_DB_PATH`     | No       | `./data/forcast-kit.db`                        | SQLite file location                                                                                              |
-| `FORCAST_KIT_API_HOST`    | No       | `127.0.0.1`                                    | API bind host                                                                                                     |
-| `FORCAST_KIT_API_PORT`    | No       | `3847`                                         | API bind port                                                                                                     |
+| `FORECAST_KIT_DB_PATH`    | No       | `./data/forecast-kit.db`                       | SQLite file location                                                                                              |
+| `FORECAST_KIT_API_HOST`   | No       | `127.0.0.1`                                    | API bind host                                                                                                     |
+| `FORECAST_KIT_API_PORT`   | No       | `3847`                                         | API bind port                                                                                                     |
 | `KALSHI_API_BASE_URL`     | No       | `https://external-api.kalshi.com/trade-api/v2` | Kalshi REST base (`external-api` hosts are recommended; demo: `https://external-api.demo.kalshi.co/trade-api/v2`) |
 | `KALSHI_API_KEY_ID`       | No       | —                                              | Only needed for authenticated endpoints                                                                           |
 | `KALSHI_PRIVATE_KEY_PATH` | No       | —                                              | PEM path for RSA-PSS signing                                                                                      |
@@ -501,20 +501,20 @@ Returns sync run status and counts.
 ## MVP CLI
 
 ```bash
-forcast-kit sync kalshi [options]
-forcast-kit list [options]
-forcast-kit inspect <ticker>
-forcast-kit serve [options]
+forecast-kit sync kalshi [options]
+forecast-kit list [options]
+forecast-kit inspect <ticker>
+forecast-kit serve [options]
 ```
 
 ### Examples
 
 ```bash
-forcast-kit sync kalshi --focus politics
-forcast-kit sync kalshi --focus weather,economics --exclude sports
-forcast-kit list --focus politics --status open
-forcast-kit inspect KXHIGHNY-25JUN22-T75
-forcast-kit serve --port 3847
+forecast-kit sync kalshi --focus politics
+forecast-kit sync kalshi --focus weather,economics --exclude sports
+forecast-kit list --focus politics --status open
+forecast-kit inspect KXHIGHNY-25JUN22-T75
+forecast-kit serve --port 3847
 ```
 
 Ink renders sync progress (page count, records upserted, errors). Non-interactive mode (`--no-ui`) for scripts and CI.
@@ -638,10 +638,10 @@ Root `package.json`:
 
 ```json
 {
-  "name": "forcast-kit",
+  "name": "forecast-kit",
   "workspaces": ["apps/*", "packages/*", "packages/providers/*"],
   "bin": {
-    "forcast-kit": "./apps/cli/src/index.tsx"
+    "forecast-kit": "./apps/cli/src/index.tsx"
   },
   "scripts": {
     "dev": "bun run apps/cli/src/index.tsx",

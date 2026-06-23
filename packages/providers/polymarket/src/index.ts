@@ -1,5 +1,5 @@
 /* eslint-disable require-yield -- Phase 5 stub */
-import type { PredictionMarketProvider, ProviderEventBatch } from '@forcast-kit/core';
+import type { PredictionMarketProvider, ProviderEventBatch } from '@forecast-kit/core';
 
 /** Polymarket provider stub — Phase 5. */
 export class PolymarketProvider implements PredictionMarketProvider {

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Handoff guide for agents working on **forcast-kit** — a Bun/TypeScript monorepo that syncs Kalshi prediction markets into local SQLite and exposes them via CLI and HTTP API for downstream research agents.
+Handoff guide for agents working on **forecast-kit** — a Bun/TypeScript monorepo that syncs Kalshi prediction markets into local SQLite and exposes them via CLI and HTTP API for downstream research agents.
 
 Full product spec: [`Project_Plan.md`](Project_Plan.md). Release history: [`CHANGELOG.md`](CHANGELOG.md). Remaining polish and post-MVP work: [`.ai/handoff-remaining.md`](.ai/handoff-remaining.md).
 
@@ -31,7 +31,7 @@ Normalizer → NormalizedEvent / NormalizedMarket / NormalizedMarketSide
       ↓
 SyncService (upsert + focus tagging + sync_runs audit)
       ↓
-SQLite (Drizzle) — ./data/forcast-kit.db
+SQLite (Drizzle) — ./data/forecast-kit.db
       ↓
 ┌─────────────┬──────────────┬──────────────┐
 │  Fastify    │  Ink CLI     │  Next.js UI  │
@@ -40,7 +40,7 @@ SQLite (Drizzle) — ./data/forcast-kit.db
 └─────────────┴──────────────┴──────────────┘
 ```
 
-**Rule:** Downstream code consumes **normalized** types from `@forcast-kit/core`, never raw Kalshi JSON (except `raw_json` columns for forward compatibility).
+**Rule:** Downstream code consumes **normalized** types from `@forecast-kit/core`, never raw Kalshi JSON (except `raw_json` columns for forward compatibility).
 
 ### Package dependency flow
 
@@ -57,7 +57,7 @@ core/providers     → registry for kalshi + polymarket
 ## Directory structure
 
 ```txt
-forcast-kit/
+forecast-kit/
 ├── AGENTS.md                 # This file
 ├── Project_Plan.md           # Full MVP spec, schema, API contracts, phases
 ├── CHANGELOG.md
@@ -144,7 +144,7 @@ Run all commands from the repo root with **Bun**.
 | `dev`         | `bun run apps/cli/src/index.tsx`                     | Run CLI interactively (Ink UI)                 |
 | `serve`       | `bun run apps/api/src/index.ts`                      | Start Fastify API on `127.0.0.1:3847`          |
 | `ui`          | `bun run serve & bun run ui:app`                     | API + explorer UI (`127.0.0.1:3847` + `:3848`) |
-| `ui:app`      | `bun run --filter @forcast-kit/ui dev`               | Next.js UI only (API must already be running)  |
+| `ui:app`      | `bun run --filter @forecast-kit/ui dev`              | Next.js UI only (API must already be running)  |
 | `dev:explore` | `bun run ui`                                         | Alias for `ui`                                 |
 | `sync:kalshi` | `bun run apps/cli/src/index.tsx sync kalshi --no-ui` | Non-interactive Kalshi sync                    |
 | `db:generate` | `drizzle-kit generate`                               | Generate migration from schema changes         |
@@ -191,17 +191,17 @@ bun run apps/cli/src/index.tsx inspect <ticker>
 
 ## CLI
 
-Entry: `forcast-kit` (bin → `apps/cli/src/index.tsx`)
+Entry: `forecast-kit` (bin → `apps/cli/src/index.tsx`)
 
-| Command       | Example                                                     |
-| ------------- | ----------------------------------------------------------- |
-| `sync kalshi` | `forcast-kit sync kalshi --focus politics --exclude sports` |
-| `list`        | `forcast-kit list --focus politics --status open`           |
-| `events`      | `forcast-kit events --focus politics`                       |
-| `inspect`     | `forcast-kit inspect KXPRES-24-DEM`                         |
-| `serve`       | `forcast-kit serve --port 3847`                             |
+| Command       | Example                                                      |
+| ------------- | ------------------------------------------------------------ |
+| `sync kalshi` | `forecast-kit sync kalshi --focus politics --exclude sports` |
+| `list`        | `forecast-kit list --focus politics --status open`           |
+| `events`      | `forecast-kit events --focus politics`                       |
+| `inspect`     | `forecast-kit inspect KXPRES-24-DEM`                         |
+| `serve`       | `forecast-kit serve --port 3847`                             |
 
-**Flags:** `--focus`, `--exclude`, `--status`, `--limit`, `--max-pages`, `--full`, `--no-ui`, `--verbose`, `--help`
+**Flags:** `--focus`, `--exclude`, `--category`, `--tag`, `--status`, `--limit`, `--max-pages`, `--full`, `--no-ui`, `--verbose`, `--help`
 
 Use `--no-ui` for scripts and CI. Interactive sync uses Ink (`SyncApp.tsx`). CLI sync resolves providers via `ProviderRegistry` (default `kalshi`).
 
@@ -211,27 +211,38 @@ Use `--no-ui` for scripts and CI. Interactive sync uses Ink (`SyncApp.tsx`). CLI
 
 Base URL: `http://127.0.0.1:3847`
 
-| Method  | Path                                | Notes                                                                  |
-| ------- | ----------------------------------- | ---------------------------------------------------------------------- |
-| `GET`   | `/health`                           | `{ status, db }`                                                       |
-| `GET`   | `/markets`                          | Query: `focus`, `exclude`, `status`, `stale`, `q`, `limit`, `cursor`   |
-| `GET`   | `/markets/:ticker`                  | Full detail; `?includeMetrics=true` adds spread/mid/implied            |
-| `GET`   | `/markets/:ticker/export`           | Agent export JSON schema v1.0 (spread, mid, implied prob)              |
-| `GET`   | `/events`                           | Same filters; `?includeMarkets=true`                                   |
-| `GET`   | `/events/:eventTicker`              | Event + markets; `?includeMetrics=true` for comparison columns         |
-| `POST`  | `/sync`                             | Body: `{ provider, focus, exclude, maxPages, full }` → background sync |
-| `GET`   | `/sync`                             | Paginated sync run list                                                |
-| `GET`   | `/sync/:id`                         | Sync run status and counts                                             |
-| `PATCH` | `/admin/markets/:ticker`            | Focused manual edits (local dev only)                                  |
-| `PUT`   | `/admin/markets/:ticker/focus-tags` | Replace focus tags                                                     |
+| Method  | Path                                | Notes                                                                                   |
+| ------- | ----------------------------------- | --------------------------------------------------------------------------------------- |
+| `GET`   | `/health`                           | `{ status, db }`                                                                        |
+| `GET`   | `/markets`                          | Query: `focus`, `exclude`, `category`, `tag`, `status`, `stale`, `q`, `limit`, `cursor` |
+| `GET`   | `/markets/:ticker`                  | Full detail; `?includeMetrics=true` adds spread/mid/implied                             |
+| `GET`   | `/markets/:ticker/export`           | Agent export JSON schema v1.0 (spread, mid, implied prob)                               |
+| `GET`   | `/events`                           | Same filters; `?includeMarkets=true`                                                    |
+| `GET`   | `/events/:eventTicker`              | Event + markets; `?includeMetrics=true` for comparison columns                          |
+| `GET`   | `/taxonomy`                         | Kalshi categories + tags from last taxonomy sync                                        |
+| `GET`   | `/taxonomy/series`                  | Browse synced series (`?category=`, `?limit=`)                                          |
+| `POST`  | `/sync`                             | Body: `{ provider, focus, exclude, maxPages, full }` → background sync                  |
+| `POST`  | `/sync/taxonomy`                    | Refresh Kalshi category/tag/series metadata (`{ full?: boolean }`)                      |
+| `GET`   | `/sync`                             | Paginated sync run list                                                                 |
+| `GET`   | `/sync/:id`                         | Sync run status and counts                                                              |
+| `PATCH` | `/admin/markets/:ticker`            | Focused manual edits (local dev only)                                                   |
+| `PUT`   | `/admin/markets/:ticker/focus-tags` | Replace focus tags                                                                      |
 
 List endpoints paginate with opaque base64url cursors (market/event id).
+
+**Scheduled refresh (external cron):** taxonomy sync runs automatically at the start of each `POST /sync`. For periodic updates without manual triggers:
+
+```bash
+# Every 6h: refresh taxonomy, then incremental market sync
+0 */6 * * * curl -s -X POST http://127.0.0.1:3847/sync/taxonomy
+15 */6 * * * curl -s -X POST http://127.0.0.1:3847/sync -H 'Content-Type: application/json' -d '{"provider":"kalshi"}'
+```
 
 ---
 
 ## Database (SQLite + Drizzle)
 
-**File:** `./data/forcast-kit.db` (override with `FORCAST_KIT_DB_PATH`)
+**File:** `./data/forecast-kit.db` (override with `FORECAST_KIT_DB_PATH`)
 
 **Runtime:** Bun native SQLite (`packages/db/src/client.ts`)  
 **Migrations / tests:** `better-sqlite3` (Drizzle Kit migrate + Vitest in-memory)
@@ -254,13 +265,13 @@ Migrations: `packages/db/migrations/0000_omniscient_kree.sql`, `0001_add_market_
 
 Kalshi “questions” map to **`events`**; tradable outcomes map to **`markets`**, linked by `markets.event_ticker`.
 
-Example: event `KXNEXTDNCCHAIR-45` (“Who will be the next DNC Chair?”) has many markets (`KXNEXTDNCCHAIR-45-PBUT`, …). Use `GET /events/:eventTicker` or `forcast-kit events KXNEXTDNCCHAIR-45` to fetch the parent question and all outcomes.
+Example: event `KXNEXTDNCCHAIR-45` (“Who will be the next DNC Chair?”) has many markets (`KXNEXTDNCCHAIR-45-PBUT`, …). Use `GET /events/:eventTicker` or `forecast-kit events KXNEXTDNCCHAIR-45` to fetch the parent question and all outcomes.
 
 ### Stored vs derived pricing
 
 **Persisted on `markets` at sync:** `volume`, `volume_24h`, `open_interest`, `liquidity`, `yes_bid`, `yes_ask`, `no_bid`, `no_ask`, `last_price` (Kalshi dollars 0–1 ≈ implied %). Also denormalized on `market_sides` (`bid`, `ask`, `price`).
 
-**Computed at export only** (`deriveMarketMetrics` in `@forcast-kit/core`): spread, mid price, implied probability (`last_price` ?? Yes mid). Not stored as DB columns. Each market’s probability is independent (not normalized across an event).
+**Computed at export only** (`deriveMarketMetrics` in `@forecast-kit/core`): spread, mid price, implied probability (`last_price` ?? Yes mid). Not stored as DB columns. Each market’s probability is independent (not normalized across an event).
 
 **After schema changes:** `bun run db:generate` then `bun run db:migrate`.
 
@@ -275,10 +286,10 @@ Example: event `KXNEXTDNCCHAIR-45` (“Who will be the next DNC Chair?”) has m
 
 **Subpath exports** (avoid pulling `bun:sqlite` in Vitest):
 
-- `@forcast-kit/db/query`
-- `@forcast-kit/db/repositories`
-- `@forcast-kit/db/export`
-- `@forcast-kit/db/test-utils`
+- `@forecast-kit/db/query`
+- `@forecast-kit/db/repositories`
+- `@forecast-kit/db/export`
+- `@forecast-kit/db/test-utils`
 
 ---
 
@@ -288,7 +299,7 @@ Rules live in `packages/core/src/focus/rules.json` (category, series prefix, key
 
 - **Sync:** `--focus` / `--exclude` filter which markets are persisted (tags always derived first).
 - **Query:** Same filters via CLI flags or API query params (OR for focus, then exclude).
-- **Functions:** `deriveFocusTags()`, `matchesFocusFilter()`, `shouldPersistMarket()` in `@forcast-kit/core`.
+- **Functions:** `deriveFocusTags()`, `matchesFocusFilter()`, `shouldPersistMarket()` in `@forecast-kit/core`.
 
 Edit `rules.json` to tune classification without schema migrations. Keyword matching is substring-based (e.g. keyword `AI` can false-positive on words like “Chair”).
 
@@ -316,16 +327,16 @@ Kalshi uses public endpoints (no API keys required for MVP sync). Optional auth 
 
 | Variable                  | Default                                        | Purpose                          |
 | ------------------------- | ---------------------------------------------- | -------------------------------- |
-| `FORCAST_KIT_DB_PATH`     | `./data/forcast-kit.db`                        | SQLite file                      |
-| `FORCAST_KIT_API_HOST`    | `127.0.0.1`                                    | API bind host                    |
-| `FORCAST_KIT_API_PORT`    | `3847`                                         | API bind port                    |
+| `FORECAST_KIT_DB_PATH`    | `./data/forecast-kit.db`                       | SQLite file                      |
+| `FORECAST_KIT_API_HOST`   | `127.0.0.1`                                    | API bind host                    |
+| `FORECAST_KIT_API_PORT`   | `3847`                                         | API bind port                    |
 | `KALSHI_API_BASE_URL`     | `https://external-api.kalshi.com/trade-api/v2` | Kalshi REST base                 |
 | `KALSHI_API_KEY_ID`       | —                                              | Optional auth                    |
 | `KALSHI_PRIVATE_KEY_PATH` | —                                              | Optional PEM for RSA-PSS         |
 | `SYNC_PAGE_LIMIT`         | `200`                                          | Max records per Kalshi page      |
 | `SYNC_REQUEST_DELAY_MS`   | `100`                                          | Delay between paginated requests |
 
-Load via `loadConfig()` from `@forcast-kit/core`.
+Load via `loadConfig()` from `@forecast-kit/core`.
 
 ---
 
@@ -334,9 +345,9 @@ Load via `loadConfig()` from `@forcast-kit/core`.
 - **Pattern:** `**/*.spec.ts` only (not `.test.ts`)
 - **Runner:** Vitest (`vitest.config.ts`)
 - **Fixtures:** `packages/providers/kalshi/fixtures/events-page.json`
-- **DB tests:** `createTestDatabase()` from `@forcast-kit/db/test-utils` (applies migration SQL to `:memory:`)
+- **DB tests:** `createTestDatabase()` from `@forecast-kit/db/test-utils` (applies migration SQL to `:memory:`)
 
-Do **not** import `@forcast-kit/db` main entry in Vitest-only test files if you only need query/repos — use subpath exports to avoid `bun:sqlite` under Vite.
+Do **not** import `@forecast-kit/db` main entry in Vitest-only test files if you only need query/repos — use subpath exports to avoid `bun:sqlite` under Vite.
 
 ---
 
@@ -403,7 +414,7 @@ Phases 1–5 are complete (v0.5.0). Post-MVP work: implement Polymarket fetch pe
 
 ## Learned Workspace Facts
 
-- Repo bootstrapped at `/Users/tjeastmond/Projects/forcast-kit` with `Project_Plan.md` copied from sibling `forcastkit.dev`.
+- Repo bootstrapped at `/Users/tjeastmond/Projects/forecast-kit` with `Project_Plan.md` copied from sibling `forecastkit.dev`.
 - GitHub Actions CI (`.github/workflows/ci.yml`) runs `typecheck`, `lint`, and `test` on push/PR to `main`.
 - Post-MVP polish is complete; `.ai/handoff-remaining.md` lists done items and explicit out-of-scope work; track bugs in `.ai/issues.md`.
 - Sibling design reference **applied.dev** lives at `/Users/tjeastmond/Projects/applied.dev` (Next.js 15, shadcn, card-based list UI).
