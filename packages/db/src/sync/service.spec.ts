@@ -98,6 +98,10 @@ class MockProvider implements PredictionMarketProvider {
     yield this.batch;
   }
 
+  fetchEvent(): Promise<ProviderEventBatch | null> {
+    return Promise.resolve(this.batch);
+  }
+
   fetchMarket(): Promise<null> {
     return Promise.resolve(null);
   }
@@ -190,6 +194,31 @@ describe('SyncService', () => {
 
     expect(oldRow?.isStale).toBe(true);
     expect(currentRow?.isStale).toBe(false);
+  });
+
+  it('syncs a single event and its markets without focus filtering', async () => {
+    const db = createTestDatabase();
+    const repos = createRepositories(db);
+    const syncService = createSyncService(repos);
+    const sportsOnSameEvent: NormalizedMarket = {
+      ...sportsMarket,
+      eventTicker: 'KXPRES-24',
+      seriesTicker: 'KXPRES',
+    };
+    const provider = new MockProvider({
+      events: [sampleEvent],
+      markets: [sampleMarket, sportsOnSameEvent],
+      sides: sampleSides,
+    });
+
+    const result = await syncService.syncEvent(provider, 'KXPRES-24');
+
+    expect(result.status).toBe('success');
+    expect(result.eventsUpserted).toBe(1);
+    expect(result.marketsUpserted).toBe(2);
+
+    const rows = await db.select().from(markets);
+    expect(rows).toHaveLength(2);
   });
 });
 

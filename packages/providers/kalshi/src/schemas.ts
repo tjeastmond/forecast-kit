@@ -58,6 +58,14 @@ export const kalshiMarketResponseSchema = z
   })
   .passthrough();
 
+export const kalshiEventResponseSchema = z
+  .object({
+    event: kalshiEventSchema,
+    markets: z.array(kalshiMarketSchema).optional(),
+  })
+  .passthrough();
+
 export type KalshiMarket = z.infer<typeof kalshiMarketSchema>;
 export type KalshiEvent = z.infer<typeof kalshiEventSchema>;
 export type KalshiEventsResponse = z.infer<typeof kalshiEventsResponseSchema>;
+export type KalshiEventResponse = z.infer<typeof kalshiEventResponseSchema>;

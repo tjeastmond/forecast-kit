@@ -189,6 +189,7 @@ export async function fetchEvents(options: {
   q?: string;
   limit?: number;
   cursor?: string;
+  includeMarkets?: boolean;
 }): Promise<EventListResponse> {
   return apiFetch(
     `/events${buildQuery({
@@ -197,6 +198,7 @@ export async function fetchEvents(options: {
       q: options.q,
       limit: options.limit?.toString(),
       cursor: options.cursor,
+      includeMarkets: options.includeMarkets === true ? 'true' : undefined,
     })}`,
   );
 }
@@ -227,6 +229,16 @@ export async function startSync(body: {
   maxPages?: number;
 }): Promise<{ syncRunId: number; status: string }> {
   return apiFetch('/sync', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+export async function startEventSync(
+  eventTicker: string,
+  body: { provider?: string } = {},
+): Promise<{ syncRunId: number; status: string; eventTicker: string }> {
+  return apiFetch(`/events/${encodeURIComponent(eventTicker)}/sync`, {
     method: 'POST',
     body: JSON.stringify(body),
   });

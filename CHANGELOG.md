@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `POST /events/:eventTicker/sync` to refresh a single event and its markets from Kalshi
+- Event detail page sync button and events-first explorer navigation (events → markets → detail sheet)
 - CLI `--full` flag for full sync with stale-market marking (parity with `POST /sync`)
 - CLI `events` command to list events and show event detail with filtered markets
 - CLI sync resolves providers via `ProviderRegistry` (same pattern as API)
@@ -24,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Explorer default route and nav prioritize `/events`; event detail shows market cards instead of comparison table
 - `bun run ui` now starts the API server and explorer UI together; use `bun run ui:app` for UI only
 - UI defaults to same-origin `/api` proxy (avoids CORS); API CORS preflight fixed via `@fastify/cors`
 - `Project_Plan.md` milestone checkboxes marked complete for Phases 1–5

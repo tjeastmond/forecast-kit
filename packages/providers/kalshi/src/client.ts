@@ -1,7 +1,9 @@
 import { logger } from '@forcast-kit/core';
 import {
+  kalshiEventResponseSchema,
   kalshiEventsResponseSchema,
   kalshiMarketResponseSchema,
+  type KalshiEventResponse,
   type KalshiEventsResponse,
   type KalshiMarket,
 } from './schemas.js';
@@ -64,6 +66,21 @@ export class KalshiClient {
 
     const json: unknown = await this.requestJson(url);
     return kalshiEventsResponseSchema.parse(json);
+  }
+
+  async fetchEvent(eventTicker: string): Promise<KalshiEventResponse | null> {
+    const url = new URL(`${this.config.baseUrl}/events/${encodeURIComponent(eventTicker)}`);
+    url.searchParams.set('with_nested_markets', 'true');
+
+    try {
+      const json: unknown = await this.requestJson(url);
+      return kalshiEventResponseSchema.parse(json);
+    } catch (error) {
+      if (error instanceof KalshiNotFoundError) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async fetchMarket(ticker: string): Promise<KalshiMarket | null> {

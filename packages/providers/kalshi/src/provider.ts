@@ -80,6 +80,34 @@ export class KalshiProvider implements PredictionMarketProvider {
     } while (cursor);
   }
 
+  async fetchEvent(eventTicker: string): Promise<ProviderEventBatch | null> {
+    const response = await this.client.fetchEvent(eventTicker);
+    if (!response) {
+      return null;
+    }
+
+    const parsed = kalshiEventSchema.safeParse(response.event);
+    if (!parsed.success) {
+      logger.warn({
+        component: 'kalshi-provider',
+        msg: 'invalid event payload',
+        eventTicker,
+        error: parsed.error.message,
+      });
+      return null;
+    }
+
+    const normalized = normalizeEventWithMarkets(parsed.data);
+    logger.info({
+      component: 'kalshi-provider',
+      msg: 'event fetched',
+      eventTicker,
+      markets: normalized.markets.length,
+    });
+
+    return normalized;
+  }
+
   async fetchMarket(ticker: string): Promise<ProviderMarket | null> {
     const raw = await this.client.fetchMarket(ticker);
     if (!raw) {

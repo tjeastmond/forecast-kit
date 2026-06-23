@@ -12,6 +12,11 @@ export class PolymarketProvider implements PredictionMarketProvider {
     })();
   }
 
+  fetchEvent(eventTicker: string): Promise<ProviderEventBatch | null> {
+    void eventTicker;
+    return Promise.reject(new Error('PolymarketProvider not implemented'));
+  }
+
   fetchMarket(ticker: string): Promise<null> {
     void ticker;
     return Promise.reject(new Error('PolymarketProvider not implemented'));

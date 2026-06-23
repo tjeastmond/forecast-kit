@@ -18,6 +18,7 @@ export default function EventsPage() {
     try {
       const result = await fetchEvents({
         ...(searchQuery.trim() ? { q: searchQuery.trim() } : {}),
+        includeMarkets: true,
         limit: 50,
       });
       setEvents(result.events);
@@ -53,7 +54,13 @@ export default function EventsPage() {
       <div className="space-y-4">
         {loading
           ? [1, 2, 3].map((key) => <Card key={key} className="h-20 animate-pulse" />)
-          : events.map((event) => <EventCard key={event.eventTicker} event={event} />)}
+          : events.map((event) => (
+              <EventCard
+                key={event.eventTicker}
+                event={event}
+                {...(event.markets !== undefined ? { marketCount: event.markets.length } : {})}
+              />
+            ))}
         {!loading && events.length === 0 ? (
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">No events found.</p>

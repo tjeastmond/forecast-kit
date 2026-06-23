@@ -21,23 +21,31 @@ export function AppShell({
   const { toggleTheme } = useTheme();
   const pathname = usePathname();
 
+  const title = onTitleClick ? (
+    <button type="button" onClick={onTitleClick} className="text-3xl font-bold tracking-tight">
+      FORCAST-KIT.
+    </button>
+  ) : (
+    <Link href="/events" className="text-3xl font-bold tracking-tight">
+      FORCAST-KIT.
+    </Link>
+  );
+
   return (
     <div className="min-h-screen">
       <header className="border-border border-b">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-4">
-          <button type="button" onClick={onTitleClick} className="text-3xl font-bold tracking-tight">
-            FORCAST-KIT.
-          </button>
+          {title}
           <div className="flex items-center gap-2">
             <nav className="flex gap-1">
-              <Link href="/markets">
-                <Button variant={pathname.startsWith('/markets') ? 'default' : 'outline'} size="default">
-                  Markets
-                </Button>
-              </Link>
               <Link href="/events">
                 <Button variant={pathname.startsWith('/events') ? 'default' : 'outline'} size="default">
                   Events
+                </Button>
+              </Link>
+              <Link href="/markets">
+                <Button variant={pathname.startsWith('/markets') ? 'default' : 'outline'} size="default">
+                  Markets
                 </Button>
               </Link>
             </nav>

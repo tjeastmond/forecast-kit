@@ -87,6 +87,7 @@ export interface ProviderMarket {
 export interface PredictionMarketProvider {
   readonly id: ProviderId;
   fetchOpenEvents(options?: FetchOptions): AsyncGenerator<ProviderEventBatch>;
+  fetchEvent(eventTicker: string): Promise<ProviderEventBatch | null>;
   fetchMarket(ticker: string): Promise<ProviderMarket | null>;
 }
 

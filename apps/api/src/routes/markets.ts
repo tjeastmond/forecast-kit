@@ -118,6 +118,16 @@ export const eventRoutes: FastifyPluginCallback = (app, _opts, done) => {
     return event;
   });
 
+  app.post('/events/:eventTicker/sync', async (request) => {
+    const { eventTicker } = request.params as { eventTicker: string };
+    const body = (request.body ?? {}) as { provider?: string };
+    const providerId = (body.provider ?? 'kalshi') as ProviderId;
+    const provider = app.providers.require(providerId);
+
+    const { syncRunId } = await app.sync.startBackgroundEventSync(provider, eventTicker);
+    return { syncRunId, status: 'running', eventTicker };
+  });
+
   done();
 };
 
