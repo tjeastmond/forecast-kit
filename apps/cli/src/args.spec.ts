@@ -45,12 +45,12 @@ describe('runCommand', () => {
     const result = await runCommand(parseArgs(['not-a-command']));
     expect(result.exitCode).toBe(1);
     expect(result.message).toContain('Unknown command: not-a-command');
-    expect(result.message).toContain('forcast-kit sync kalshi');
+    expect(result.message).toContain('forecast-kit sync kalshi');
   });
 
   it('returns help text for --help', async () => {
     const result = await runCommand(parseArgs(['--help']));
     expect(result.exitCode).toBe(0);
-    expect(result.message).toContain('forcast-kit events');
+    expect(result.message).toContain('forecast-kit events');
   });
 });

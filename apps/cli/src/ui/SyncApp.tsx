@@ -20,7 +20,7 @@ export function SyncApp({ args }: SyncAppProps) {
 
   return (
     <Box flexDirection="column">
-      <Text bold>forcast-kit sync</Text>
+      <Text bold>forecast-kit sync</Text>
       <Text>{message}</Text>
       {exitCode !== 0 ? <Text color="red">Exit code: {String(exitCode)}</Text> : null}
     </Box>

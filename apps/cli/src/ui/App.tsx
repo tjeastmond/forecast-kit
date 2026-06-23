@@ -8,7 +8,7 @@ interface AppProps {
 export function App({ message }: AppProps) {
   return (
     <Box flexDirection="column">
-      <Text bold>forcast-kit</Text>
+      <Text bold>forecast-kit</Text>
       <Text>{message}</Text>
     </Box>
   );

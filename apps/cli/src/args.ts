@@ -57,18 +57,20 @@ export function hasFlag(flags: Readonly<Record<string, string | boolean>>, key: 
   return flags[key] === true || typeof flags[key] === 'string';
 }
 
-export const HELP_TEXT = `forcast-kit — Kalshi market data CLI
+export const HELP_TEXT = `forecast-kit — Kalshi market data CLI
 
 Usage:
-  forcast-kit sync kalshi [options]   Sync open markets from Kalshi
-  forcast-kit list [options]          List stored markets
-  forcast-kit events [eventTicker]    List events or show event detail (alias: event)
-  forcast-kit inspect <ticker>        Show market detail
-  forcast-kit serve [options]         Start the local API server
+  forecast-kit sync kalshi [options]   Sync open markets from Kalshi
+  forecast-kit list [options]          List stored markets
+  forecast-kit events [eventTicker]    List events or show event detail (alias: event)
+  forecast-kit inspect <ticker>        Show market detail
+  forecast-kit serve [options]         Start the local API server
 
 Options:
   --focus <tags>      Comma-separated focus tags (politics, weather, ...)
   --exclude <tags>    Comma-separated focus tags to exclude
+  --category <name>   Filter by Kalshi category (from synced taxonomy)
+  --tag <name>        Filter by Kalshi series tag (from synced taxonomy)
   --status <status>   Filter by market status
   --limit <n>         Max rows for list/events (default 50)
   --full              Full sync (fetch all pages, mark unseen markets stale)

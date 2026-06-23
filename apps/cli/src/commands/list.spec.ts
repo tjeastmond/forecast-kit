@@ -1,8 +1,8 @@
-import { deriveFocusTags } from '@forcast-kit/core';
-import type { NormalizedEvent, NormalizedMarket } from '@forcast-kit/core';
-import { createQueryServices } from '@forcast-kit/db/query';
-import { createRepositories } from '@forcast-kit/db/repositories';
-import { createTestDatabase } from '@forcast-kit/db/test-utils';
+import { deriveFocusTags } from '@forecast-kit/core';
+import type { NormalizedEvent, NormalizedMarket } from '@forecast-kit/core';
+import { createQueryServices } from '@forecast-kit/db/query';
+import { createRepositories } from '@forecast-kit/db/repositories';
+import { createTestDatabase } from '@forecast-kit/db/test-utils';
 import { describe, expect, it } from 'vitest';
 import { parseArgs } from '../args.js';
 import { listMarketsWithQuery, parseTickersFromListOutput } from './list.js';

@@ -1,6 +1,6 @@
-import { createProviderRegistry, loadConfig } from '@forcast-kit/core';
-import { KalshiProvider } from '@forcast-kit/provider-kalshi';
-import { PolymarketProvider } from '@forcast-kit/provider-polymarket';
+import { createProviderRegistry, loadConfig } from '@forecast-kit/core';
+import { KalshiProvider } from '@forecast-kit/provider-kalshi';
+import { PolymarketProvider } from '@forecast-kit/provider-polymarket';
 
 export function createCliProviderRegistry() {
   const config = loadConfig();

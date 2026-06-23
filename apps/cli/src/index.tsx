@@ -1,4 +1,4 @@
-import { logger } from '@forcast-kit/core';
+import { logger } from '@forecast-kit/core';
 import { render } from 'ink';
 import React from 'react';
 import { parseArgs } from './args.js';

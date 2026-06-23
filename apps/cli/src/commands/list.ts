@@ -1,5 +1,5 @@
-import { loadConfig, parseFocusList } from '@forcast-kit/core';
-import type { QueryServices } from '@forcast-kit/db/query';
+import { loadConfig, parseFocusList } from '@forecast-kit/core';
+import type { QueryServices } from '@forecast-kit/db/query';
 import { getFlagString, type ParsedArgs } from '../args.js';
 import type { CommandResult } from './index.js';
 
@@ -40,12 +40,16 @@ export async function listMarketsWithQuery(query: QueryServices, args: ParsedArg
   const focus = parseFocusList(getFlagString(args.flags, 'focus'));
   const exclude = parseFocusList(getFlagString(args.flags, 'exclude'));
   const status = getFlagString(args.flags, 'status');
+  const category = getFlagString(args.flags, 'category');
+  const tag = getFlagString(args.flags, 'tag');
   const limit = parseLimitFlag(getFlagString(args.flags, 'limit'));
 
   const { markets } = await query.markets.listMarkets({
     ...(focus.length > 0 ? { focus } : {}),
     ...(exclude.length > 0 ? { exclude } : {}),
     ...(status !== undefined ? { status } : {}),
+    ...(category !== undefined ? { category } : {}),
+    ...(tag !== undefined ? { tag } : {}),
     limit,
   });
 
@@ -54,9 +58,9 @@ export async function listMarketsWithQuery(query: QueryServices, args: ParsedArg
 
 export async function runListCommand(args: ParsedArgs): Promise<CommandResult> {
   const config = loadConfig();
-  const { createDatabase } = await import('@forcast-kit/db');
-  const { createQueryServices } = await import('@forcast-kit/db/query');
-  const db = createDatabase(config.FORCAST_KIT_DB_PATH);
+  const { createDatabase } = await import('@forecast-kit/db');
+  const { createQueryServices } = await import('@forecast-kit/db/query');
+  const db = createDatabase(config.FORECAST_KIT_DB_PATH);
   const query = createQueryServices(db);
   return listMarketsWithQuery(query, args);
 }
@@ -68,9 +72,9 @@ export async function runInspectCommand(args: ParsedArgs): Promise<CommandResult
   }
 
   const config = loadConfig();
-  const { createDatabase } = await import('@forcast-kit/db');
-  const { createQueryServices } = await import('@forcast-kit/db/query');
-  const db = createDatabase(config.FORCAST_KIT_DB_PATH);
+  const { createDatabase } = await import('@forecast-kit/db');
+  const { createQueryServices } = await import('@forecast-kit/db/query');
+  const db = createDatabase(config.FORECAST_KIT_DB_PATH);
   const query = createQueryServices(db);
 
   const market = await query.markets.getMarketByTicker(ticker);

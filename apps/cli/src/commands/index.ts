@@ -1,4 +1,4 @@
-import { setLogLevel } from '@forcast-kit/core';
+import { setLogLevel } from '@forecast-kit/core';
 import { getFlagString, hasFlag, HELP_TEXT, type ParsedArgs } from '../args.js';
 
 export interface CommandResult {
@@ -37,10 +37,10 @@ export async function runCommand(args: ParsedArgs): Promise<CommandResult> {
 async function runServeCommand(args: ParsedArgs): Promise<CommandResult> {
   const port = getFlagString(args.flags, 'port');
   if (port) {
-    process.env.FORCAST_KIT_API_PORT = port;
+    process.env.FORECAST_KIT_API_PORT = port;
   }
 
-  const { startServer } = await import('@forcast-kit/api');
+  const { startServer } = await import('@forecast-kit/api');
   await startServer();
   return { exitCode: 0 };
 }

@@ -1,5 +1,6 @@
-import { loadConfig, parseFocusList, type ProviderId } from '@forcast-kit/core';
-import { createDatabase, createRepositories, createSyncService } from '@forcast-kit/db';
+import { loadConfig, parseFocusList, type ProviderId } from '@forecast-kit/core';
+import { createDatabase, createRepositories, createSyncService, createTaxonomySyncService } from '@forecast-kit/db';
+import { KalshiProvider } from '@forecast-kit/provider-kalshi';
 import { getFlagString, hasFlag, type ParsedArgs } from '../args.js';
 import { createCliProviderRegistry } from '../providers.js';
 import type { CommandResult } from './index.js';
@@ -17,9 +18,10 @@ export async function runSyncCommand(args: ParsedArgs): Promise<CommandResult> {
   }
 
   const config = loadConfig();
-  const db = createDatabase(config.FORCAST_KIT_DB_PATH);
+  const db = createDatabase(config.FORECAST_KIT_DB_PATH);
   const repos = createRepositories(db);
-  const syncService = createSyncService(repos);
+  const taxonomy = providerId === 'kalshi' ? createTaxonomySyncService(repos, new KalshiProvider(config)) : undefined;
+  const syncService = createSyncService(repos, taxonomy);
 
   const focus = parseFocusList(getFlagString(args.flags, 'focus'));
   const exclude = parseFocusList(getFlagString(args.flags, 'exclude'));

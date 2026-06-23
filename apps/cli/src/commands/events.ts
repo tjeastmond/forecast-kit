@@ -1,5 +1,5 @@
-import { loadConfig, parseFocusList } from '@forcast-kit/core';
-import type { QueryServices } from '@forcast-kit/db/query';
+import { loadConfig, parseFocusList } from '@forecast-kit/core';
+import type { QueryServices } from '@forecast-kit/db/query';
 import { getFlagString, type ParsedArgs } from '../args.js';
 import type { CommandResult } from './index.js';
 
@@ -71,6 +71,8 @@ export async function listEventsWithQuery(query: QueryServices, args: ParsedArgs
   const eventTicker = args.subcommand ?? args.positional[0];
   const focus = parseFocusList(getFlagString(args.flags, 'focus'));
   const exclude = parseFocusList(getFlagString(args.flags, 'exclude'));
+  const category = getFlagString(args.flags, 'category');
+  const tag = getFlagString(args.flags, 'tag');
   const limit = parseLimitFlag(getFlagString(args.flags, 'limit'));
 
   if (eventTicker) {
@@ -89,6 +91,8 @@ export async function listEventsWithQuery(query: QueryServices, args: ParsedArgs
   const { events } = await query.events.listEvents({
     ...(focus.length > 0 ? { focus } : {}),
     ...(exclude.length > 0 ? { exclude } : {}),
+    ...(category !== undefined ? { category } : {}),
+    ...(tag !== undefined ? { tag } : {}),
     limit,
   });
 
@@ -103,9 +107,9 @@ export async function listEventsWithQuery(query: QueryServices, args: ParsedArgs
 
 export async function runEventsCommand(args: ParsedArgs): Promise<CommandResult> {
   const config = loadConfig();
-  const { createDatabase } = await import('@forcast-kit/db');
-  const { createQueryServices } = await import('@forcast-kit/db/query');
-  const db = createDatabase(config.FORCAST_KIT_DB_PATH);
+  const { createDatabase } = await import('@forecast-kit/db');
+  const { createQueryServices } = await import('@forecast-kit/db/query');
+  const db = createDatabase(config.FORECAST_KIT_DB_PATH);
   const query = createQueryServices(db);
   return listEventsWithQuery(query, args);
 }
