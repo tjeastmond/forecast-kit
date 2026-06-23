@@ -70,3 +70,7 @@ export function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDi
 export function SheetBody({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('flex-1 overflow-y-auto p-4', className)} {...props} />;
 }
+
+export function SheetFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('border-border flex shrink-0 items-center gap-2 border-t p-4', className)} {...props} />;
+}
