@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- GitHub Actions **Build** job (`typecheck`, `ui:build`) on push to `main` and pull requests
+- GitHub Actions **Build** job (`format:check`, `lint`, `typecheck`, `ui:build`) on push to `main` and pull requests
 - MIT License (`LICENSE`) at repo root
 
 ## [2026-06-23]

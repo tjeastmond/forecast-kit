@@ -161,22 +161,23 @@ forecast-kit/
 
 Run all commands from the repo root with **Bun**.
 
-| Script        | Command                                              | Purpose                                                      |
-| ------------- | ---------------------------------------------------- | ------------------------------------------------------------ |
-| `dev`         | `bun run apps/cli/src/index.tsx`                     | Run CLI interactively (Ink UI)                               |
-| `serve`       | `bun run apps/api/src/index.ts`                      | Start Fastify API on `127.0.0.1:3847`                        |
-| `ui`          | `bun run scripts/dev-explore.ts`                     | Clean `.next`, start API + UI; SIGTERM/SIGINT stops both     |
-| `ui:app`      | `bun run --filter @forecast-kit/ui dev`              | Clean `.next`, Next.js UI only (API must already be running) |
-| `ui:build`    | `bun run --filter @forecast-kit/ui build`            | Production build of explorer UI                              |
-| `dev:explore` | `bun run ui`                                         | Alias for `ui`                                               |
-| `sync:kalshi` | `bun run apps/cli/src/index.tsx sync kalshi --no-ui` | Non-interactive Kalshi sync                                  |
-| `db:generate` | `drizzle-kit generate`                               | Generate migration from schema changes                       |
-| `db:migrate`  | `drizzle-kit migrate`                                | Apply migrations (uses `better-sqlite3`)                     |
-| `lint`        | `eslint .`                                           | ESLint (strict TypeScript rules)                             |
-| `format`      | `prettier --write .`                                 | Format entire repo                                           |
-| `typecheck`   | `tsc --build`                                        | Project-reference TypeScript build                           |
-| `test`        | `vitest run`                                         | Run all `**/*.spec.ts` tests once                            |
-| `test:watch`  | `vitest`                                             | Watch mode for tests                                         |
+| Script         | Command                                              | Purpose                                                      |
+| -------------- | ---------------------------------------------------- | ------------------------------------------------------------ |
+| `dev`          | `bun run apps/cli/src/index.tsx`                     | Run CLI interactively (Ink UI)                               |
+| `serve`        | `bun run apps/api/src/index.ts`                      | Start Fastify API on `127.0.0.1:3847`                        |
+| `ui`           | `bun run scripts/dev-explore.ts`                     | Clean `.next`, start API + UI; SIGTERM/SIGINT stops both     |
+| `ui:app`       | `bun run --filter @forecast-kit/ui dev`              | Clean `.next`, Next.js UI only (API must already be running) |
+| `ui:build`     | `bun run --filter @forecast-kit/ui build`            | Production build of explorer UI                              |
+| `dev:explore`  | `bun run ui`                                         | Alias for `ui`                                               |
+| `sync:kalshi`  | `bun run apps/cli/src/index.tsx sync kalshi --no-ui` | Non-interactive Kalshi sync                                  |
+| `db:generate`  | `drizzle-kit generate`                               | Generate migration from schema changes                       |
+| `db:migrate`   | `drizzle-kit migrate`                                | Apply migrations (uses `better-sqlite3`)                     |
+| `lint`         | `eslint .`                                           | ESLint (strict TypeScript rules)                             |
+| `format`       | `prettier --write .`                                 | Format entire repo                                           |
+| `format:check` | `prettier --check .`                                 | CI / verify formatting without writing                       |
+| `typecheck`    | `tsc --build`                                        | Project-reference TypeScript build                           |
+| `test`         | `vitest run`                                         | Run all `**/*.spec.ts` tests once                            |
+| `test:watch`   | `vitest`                                             | Watch mode for tests                                         |
 
 ### Typical verification loop
 

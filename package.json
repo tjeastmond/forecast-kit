@@ -23,6 +23,7 @@
     "db:migrate": "drizzle-kit migrate",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "tsc --build",
     "test": "vitest run",
     "test:watch": "vitest"
