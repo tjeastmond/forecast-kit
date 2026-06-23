@@ -409,12 +409,14 @@ Phases 1–5 are complete (v0.5.0). Post-MVP work: implement Polymarket fetch pe
 - Initial commits should document what changed (via CHANGELOG `[Unreleased]` entries and conventional commit messages).
 - Version line stays at **0.5.x** (patch) until the user requests a minor (`0.6.0`) or major (`1.0.0`) bump.
 - Mirror **applied.dev** visual/UX patterns (card lists, filters, detail sheets) when building or extending `apps/ui`.
+- When landing multi-topic work, split into **logical commits** by layer (provider, db, api, cli, ui, docs) rather than one monolithic commit.
 
 ---
 
 ## Learned Workspace Facts
 
 - Repo bootstrapped at `/Users/tjeastmond/Projects/forecast-kit` with `Project_Plan.md` copied from sibling `forecastkit.dev`.
+- GitHub repository is `tjeastmond/forecast-kit` (renamed from `forcast-kit`).
 - GitHub Actions CI (`.github/workflows/ci.yml`) runs `typecheck`, `lint`, and `test` on push/PR to `main`.
 - Post-MVP polish is complete; `.ai/handoff-remaining.md` lists done items and explicit out-of-scope work; track bugs in `.ai/issues.md`.
 - Sibling design reference **applied.dev** lives at `/Users/tjeastmond/Projects/applied.dev` (Next.js 15, shadcn, card-based list UI).
