@@ -455,6 +455,6 @@ Phases 1–5 are complete (v0.5.0). Post-MVP work: implement Polymarket fetch pe
 
 - Repo bootstrapped at `/Users/tjeastmond/Projects/forecast-kit` with `Project_Plan.md` copied from sibling `forecastkit.dev`.
 - GitHub repository is `tjeastmond/forecast-kit` (renamed from `forcast-kit`).
-- GitHub Actions CI (`.github/workflows/ci.yml`) runs `typecheck`, `lint`, and `test` on push/PR to `main`.
+- GitHub Actions CI (`.github/workflows/ci.yml`) runs `format:check`, `typecheck`, `lint`, and `test` on push/PR to `main`, plus a separate Build job that also runs those checks and `ui:build`.
 - Post-MVP polish is complete; `.ai/handoff-remaining.md` lists done items and explicit out-of-scope work; track bugs in `.ai/issues.md`.
 - Sibling design reference **applied.dev** lives at `/Users/tjeastmond/Projects/applied.dev` (Next.js 15, shadcn, card-based list UI).
