@@ -45,7 +45,7 @@ export function SheetContent({
   return (
     <div
       className={cn(
-        'bg-popover absolute top-0 right-0 flex h-full w-full max-w-lg flex-col overflow-hidden border-l shadow-2xl',
+        'bg-popover absolute top-0 right-0 flex h-full w-1/2 flex-col overflow-hidden border-l shadow-2xl',
         className,
       )}
     >
