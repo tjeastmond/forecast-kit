@@ -1,7 +1,10 @@
 'use client';
 
 import { FOCUS_VALUES } from '@/lib/constants';
+import { fetchTaxonomy } from '@/lib/api';
 import { SearchIcon, XIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { MultiSelectFilter } from '@/components/MultiSelectFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +17,8 @@ export interface MarketFilterState {
   searchQuery: string;
   focus: Set<string>;
   exclude: Set<string>;
+  category: Set<string>;
+  tag: Set<string>;
   status: Set<string>;
   staleOnly: boolean;
 }
@@ -33,6 +38,28 @@ export function MarketFilters({
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   variant?: 'markets' | 'events';
 }) {
+  const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
+  const [tagOptions, setTagOptions] = useState<{ value: string; label: string }[]>([]);
+
+  useEffect(() => {
+    void fetchTaxonomy()
+      .then((taxonomy) => {
+        setCategoryOptions(taxonomy.categories.map((entry) => ({ value: entry.name, label: entry.name })));
+        const tags = new Set<string>();
+        for (const entry of taxonomy.categories) {
+          for (const tag of entry.tags) {
+            tags.add(tag);
+          }
+        }
+        setTagOptions([...tags].sort().map((tag) => ({ value: tag, label: tag })));
+      })
+      .catch((error: unknown) => {
+        setCategoryOptions([]);
+        setTagOptions([]);
+        toast.error(error instanceof Error ? error.message : 'Failed to load categories and tags');
+      });
+  }, []);
+
   const searchPlaceholder = variant === 'events' ? 'Search Events…' : 'Search Markets…';
   const searchAriaLabel = variant === 'events' ? 'Search Events' : 'Search Markets';
 
@@ -70,6 +97,24 @@ export function MarketFilters({
           }}
           emptyLabel="Exclude Focus"
           pluralNoun="excluded"
+        />
+        <MultiSelectFilter
+          items={categoryOptions}
+          selected={filters.category}
+          onSelectedChange={(category) => {
+            onFiltersChange({ ...filters, category });
+          }}
+          emptyLabel="Filter By Category"
+          pluralNoun="categories"
+        />
+        <MultiSelectFilter
+          items={tagOptions}
+          selected={filters.tag}
+          onSelectedChange={(tag) => {
+            onFiltersChange({ ...filters, tag });
+          }}
+          emptyLabel="Filter By Tag"
+          pluralNoun="tags"
         />
         <span className={cn(!hasActiveFilters && 'cursor-not-allowed')}>
           <Button
@@ -111,16 +156,30 @@ export function MarketFilters({
   );
 }
 
+function firstSelected(values: Set<string>): string | undefined {
+  for (const value of values) {
+    return value;
+  }
+  return undefined;
+}
+
 export function filtersToQueryParams(filters: MarketFilterState): {
   focus?: string;
   exclude?: string;
+  category?: string;
+  tag?: string;
   status?: string;
   stale?: boolean;
   q?: string;
 } {
+  const category = firstSelected(filters.category);
+  const tag = firstSelected(filters.tag);
+
   return {
     ...(filters.focus.size > 0 ? { focus: [...filters.focus].join(',') } : {}),
     ...(filters.exclude.size > 0 ? { exclude: [...filters.exclude].join(',') } : {}),
+    ...(category !== undefined ? { category } : {}),
+    ...(tag !== undefined ? { tag } : {}),
     ...(filters.status.size === 1 ? { status: [...filters.status][0] } : {}),
     ...(filters.staleOnly ? { stale: true } : {}),
     ...(filters.searchQuery.trim() ? { q: filters.searchQuery.trim() } : {}),
@@ -132,6 +191,8 @@ export function hasActiveMarketFilters(filters: MarketFilterState): boolean {
     filters.searchQuery.trim().length > 0 ||
     filters.focus.size > 0 ||
     filters.exclude.size > 0 ||
+    filters.category.size > 0 ||
+    filters.tag.size > 0 ||
     filters.status.size > 0 ||
     filters.staleOnly
   );
@@ -141,6 +202,8 @@ export const emptyMarketFilters = (): MarketFilterState => ({
   searchQuery: '',
   focus: new Set(),
   exclude: new Set(),
+  category: new Set(),
+  tag: new Set(),
   status: new Set(),
   staleOnly: false,
 });

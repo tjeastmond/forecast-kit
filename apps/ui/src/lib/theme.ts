@@ -1,4 +1,4 @@
-export const THEME_STORAGE_KEY = 'forcast-kit-theme';
+export const THEME_STORAGE_KEY = 'forecast-kit-theme';
 
 const THEME_COOKIE_MAX_AGE_SECONDS = String(60 * 60 * 24 * 365);
 

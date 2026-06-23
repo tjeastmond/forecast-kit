@@ -1,12 +1,13 @@
 import type { Focus, MarketExportV1 } from '@/lib/constants';
 
-const API_BASE = process.env.NEXT_PUBLIC_FORCAST_KIT_API_URL ?? '/api';
+const API_BASE = process.env.NEXT_PUBLIC_FORECAST_KIT_API_URL ?? '/api';
 
 export interface MarketSummary {
   readonly id: number;
   readonly ticker: string;
   readonly eventTicker: string;
   readonly title: string;
+  readonly subtitle: string;
   readonly status: string;
   readonly closeTime: string;
   readonly category: string | null;
@@ -111,6 +112,17 @@ export interface SyncRunListResponse {
   readonly cursor: string | null;
 }
 
+export interface TaxonomyCategory {
+  readonly name: string;
+  readonly tags: readonly string[];
+}
+
+export interface TaxonomyResponse {
+  readonly provider: string;
+  readonly syncedAt: string | null;
+  readonly categories: readonly TaxonomyCategory[];
+}
+
 export interface MarketPatchBody {
   readonly title?: string;
   readonly subtitle?: string;
@@ -156,6 +168,8 @@ function buildQuery(params: Record<string, string | undefined>): string {
 export async function fetchMarkets(options: {
   focus?: string;
   exclude?: string;
+  category?: string;
+  tag?: string;
   status?: string;
   stale?: boolean;
   q?: string;
@@ -166,6 +180,8 @@ export async function fetchMarkets(options: {
     `/markets${buildQuery({
       focus: options.focus,
       exclude: options.exclude,
+      category: options.category,
+      tag: options.tag,
       status: options.status,
       stale: options.stale === undefined ? undefined : String(options.stale),
       q: options.q,
@@ -186,6 +202,8 @@ export async function fetchMarketExport(ticker: string): Promise<MarketExportV1>
 export async function fetchEvents(options: {
   focus?: string;
   exclude?: string;
+  category?: string;
+  tag?: string;
   status?: string;
   stale?: boolean;
   q?: string;
@@ -197,6 +215,8 @@ export async function fetchEvents(options: {
     `/events${buildQuery({
       focus: options.focus,
       exclude: options.exclude,
+      category: options.category,
+      tag: options.tag,
       status: options.status,
       stale: options.stale === undefined ? undefined : String(options.stale),
       q: options.q,
@@ -254,6 +274,23 @@ export async function fetchSyncRun(id: number): Promise<SyncRunRow> {
 
 export async function fetchSyncRuns(limit = 20): Promise<SyncRunListResponse> {
   return apiFetch(`/sync?limit=${String(limit)}`);
+}
+
+export async function fetchTaxonomy(): Promise<TaxonomyResponse> {
+  return apiFetch('/taxonomy');
+}
+
+export async function startTaxonomySync(body: { full?: boolean } = {}): Promise<{
+  status: string;
+  syncedAt?: string;
+  categoriesUpserted?: number;
+  tagsUpserted?: number;
+  seriesUpserted?: number;
+}> {
+  return apiFetch('/sync/taxonomy', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 }
 
 export function getApiBaseUrl(): string {

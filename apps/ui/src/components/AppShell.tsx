@@ -21,11 +21,11 @@ export function AppShell({
 
   const title = onTitleClick ? (
     <button type="button" onClick={onTitleClick} className="text-3xl font-bold tracking-tight">
-      FORCAST-KIT.
+      FORECAST-KIT.
     </button>
   ) : (
     <Link href="/events" className="text-3xl font-bold tracking-tight">
-      FORCAST-KIT.
+      FORECAST-KIT.
     </Link>
   );
 

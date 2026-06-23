@@ -12,7 +12,7 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'FORCAST-KIT Explorer',
+  title: 'FORECAST-KIT Explorer',
   description: 'Browse and validate synced prediction market data',
 };
 

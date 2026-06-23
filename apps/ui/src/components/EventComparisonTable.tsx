@@ -1,7 +1,7 @@
 'use client';
 
 import type { MarketComparisonRow } from '@/lib/api';
-import { formatDate, formatNumber, formatPrice, formatSpread } from '@/lib/format';
+import { formatDate, formatNumber, formatPrice, formatSpread, marketDisplayTitle } from '@/lib/format';
 
 export function EventComparisonTable({
   markets,
@@ -46,7 +46,7 @@ export function EventComparisonTable({
                   onSelectMarket(market.ticker);
                 }}
               >
-                <td className="max-w-[12rem] truncate">{market.title}</td>
+                <td className="max-w-[12rem] truncate">{marketDisplayTitle(market)}</td>
                 <td className="font-mono text-xs">{market.ticker}</td>
                 <td>{market.status}</td>
                 <td>{formatPrice(market.impliedProbability)}</td>

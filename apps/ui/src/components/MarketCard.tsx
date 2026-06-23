@@ -2,10 +2,12 @@
 
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MarketSummary } from '@/lib/api';
-import { formatDate, formatPrice } from '@/lib/format';
+import { formatDate, formatPrice, marketDisplayTitle } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 export function MarketCard({ market, onOpen }: { market: MarketSummary; onOpen: (ticker: string) => void }) {
+  const displayTitle = marketDisplayTitle(market);
+
   return (
     <Card
       className={cn(
@@ -16,14 +18,14 @@ export function MarketCard({ market, onOpen }: { market: MarketSummary; onOpen: 
       <button
         type="button"
         className="absolute inset-0 z-0 rounded-xl focus-visible:ring-3 focus-visible:outline-none"
-        aria-label={`View Details for ${market.title}`}
+        aria-label={`View Details for ${displayTitle}`}
         onClick={() => {
           onOpen(market.ticker);
         }}
       />
       <CardHeader className="pointer-events-none relative z-10 flex flex-row items-start justify-between gap-3 space-y-0 py-4">
         <div className="min-w-0 flex-1 space-y-1 text-left">
-          <CardTitle>{market.title}</CardTitle>
+          <CardTitle>{displayTitle}</CardTitle>
           <p className="text-muted-foreground text-sm">
             {market.eventTicker} · {market.status}
             {market.focusTags.length > 0 ? ` · ${market.focusTags.join(', ')}` : ''} · {formatDate(market.closeTime)}

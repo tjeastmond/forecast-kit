@@ -1,3 +1,8 @@
+export function marketDisplayTitle(market: { readonly title: string; readonly subtitle: string }): string {
+  const subtitle = market.subtitle.trim();
+  return subtitle.length > 0 ? subtitle : market.title;
+}
+
 export function formatPrice(value: number | null | undefined): string {
   if (value === null || value === undefined) {
     return '—';

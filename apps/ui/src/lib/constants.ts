@@ -1,5 +1,7 @@
 export const FOCUS_VALUES = [
   'politics',
+  'politicians',
+  'mentions',
   'weather',
   'economics',
   'technology',
