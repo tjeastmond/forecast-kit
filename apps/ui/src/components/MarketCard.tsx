@@ -2,6 +2,7 @@
 
 import { memo } from 'react';
 import { CopyIdRow } from '@/components/CopyIdRow';
+import { PinButton } from '@/components/PinButton';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MarketSummary } from '@/lib/api';
 import { copyId } from '@/lib/copy-id';
@@ -12,9 +13,11 @@ import { cn } from '@/lib/utils';
 export const MarketCard = memo(function MarketCard({
   market,
   onOpen,
+  onPinChange,
 }: {
   market: MarketSummary & MarketPayoutSortInput;
   onOpen: (ticker: string) => void;
+  onPinChange?: (ticker: string, pinned: boolean) => void;
 }) {
   const displayTitle = marketDisplayTitle(market);
   const yesPct = resolveImpliedProbability(market);
@@ -36,7 +39,7 @@ export const MarketCard = memo(function MarketCard({
           onOpen(market.ticker);
         }}
       />
-      <CardHeader className="pointer-events-none relative z-10 space-y-0 py-4">
+      <CardHeader className="pointer-events-none relative z-10 space-y-0 py-4 pr-14">
         <div className="min-w-0 space-y-1 text-left">
           <CardTitle>{displayTitle}</CardTitle>
           <p className="text-muted-foreground flex flex-wrap items-center gap-x-1 text-sm">
@@ -83,6 +86,16 @@ export const MarketCard = memo(function MarketCard({
           </p>
         </div>
       </CardHeader>
+      <div className="pointer-events-auto absolute top-3 right-3 z-20">
+        <PinButton
+          targetType="market"
+          ticker={market.ticker}
+          pinned={market.isPinned}
+          onPinChange={(nextPinned) => {
+            onPinChange?.(market.ticker, nextPinned);
+          }}
+        />
+      </div>
     </Card>
   );
 });

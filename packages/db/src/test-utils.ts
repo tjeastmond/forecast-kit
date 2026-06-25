@@ -12,6 +12,7 @@ export function createTestDatabase(): DatabaseClient {
   sqlite.exec(readFileSync(join(migrationDir, '0000_omniscient_kree.sql'), 'utf8'));
   sqlite.exec(readFileSync(join(migrationDir, '0001_add_market_stale.sql'), 'utf8'));
   sqlite.exec(readFileSync(join(migrationDir, '0002_add_kalshi_taxonomy.sql'), 'utf8'));
+  sqlite.exec(readFileSync(join(migrationDir, '0003_add_pinned_items.sql'), 'utf8'));
   sqlite.exec('PRAGMA foreign_keys = ON;');
   return drizzle(sqlite, { schema }) as unknown as DatabaseClient;
 }

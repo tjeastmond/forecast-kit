@@ -6,6 +6,8 @@ export type EventListPageSize = (typeof EVENT_LIST_PAGE_SIZES)[number];
 export const DEFAULT_EVENT_LIST_PAGE_SIZE: EventListPageSize = 10;
 export const LIST_LIMIT_STORAGE_KEY = 'forecast-kit-list-limit';
 export const EVENTS_LIST_RETURN_KEY = 'forecast-kit-events-list-return';
+export const PINNED_LIST_RETURN_KEY = 'forecast-kit-pinned-list-return';
+export const LIST_ORIGIN_KEY = 'forecast-kit-list-origin';
 
 const PAGE_SIZE_SET = new Set<number>(EVENT_LIST_PAGE_SIZES);
 
@@ -91,6 +93,19 @@ export function saveEventsListReturn(queryString: string): void {
   }
   try {
     window.sessionStorage.setItem(EVENTS_LIST_RETURN_KEY, queryString);
+    window.sessionStorage.setItem(LIST_ORIGIN_KEY, 'events');
+  } catch {
+    // sessionStorage may be unavailable
+  }
+}
+
+export function savePinnedListReturn(queryString: string): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.sessionStorage.setItem(PINNED_LIST_RETURN_KEY, queryString);
+    window.sessionStorage.setItem(LIST_ORIGIN_KEY, 'pinned');
   } catch {
     // sessionStorage may be unavailable
   }
@@ -105,6 +120,32 @@ export function readEventsListReturn(): string {
   } catch {
     return '';
   }
+}
+
+export function readPinnedListReturn(): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+  try {
+    return window.sessionStorage.getItem(PINNED_LIST_RETURN_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+export function readListBackLink(): { href: string; label: string } {
+  if (typeof window === 'undefined') {
+    return { href: '/events', label: 'Events' };
+  }
+  try {
+    const origin = window.sessionStorage.getItem(LIST_ORIGIN_KEY);
+    if (origin === 'pinned') {
+      return { href: `/${readPinnedListReturn()}`, label: 'Pinned' };
+    }
+  } catch {
+    // sessionStorage may be unavailable
+  }
+  return { href: `/events${readEventsListReturn()}`, label: 'Events' };
 }
 
 export function parseEventListParams(
@@ -171,13 +212,17 @@ export function serializeEventListParams(params: EventListParams): URLSearchPara
   return next;
 }
 
-export function buildEventsListCacheKey(params: EventListParams): string {
+export function buildEventsListCacheKey(params: EventListParams, options?: { pinned?: boolean }): string {
   const serialized = serializeEventListParams(params);
   const entries = [...serialized.entries()].sort(([left], [right]) => left.localeCompare(right));
-  return entries.map(([key, value]) => `${key}=${value}`).join('&');
+  const base = entries.map(([key, value]) => `${key}=${value}`).join('&');
+  return options?.pinned === true ? `pinned:${base}` : base;
 }
 
-export function buildEventsFetchOptions(params: EventListParams): {
+export function buildEventsFetchOptions(
+  params: EventListParams,
+  options?: { pinned?: boolean },
+): {
   focus?: string;
   category?: string;
   tag?: string;
@@ -186,13 +231,17 @@ export function buildEventsFetchOptions(params: EventListParams): {
   limit: number;
   cursor?: string;
   includeMarkets: true;
+  pinned?: boolean;
 } {
   const query = filtersToQueryParams(params.filters);
   return {
     ...query,
     limit: params.pageSize,
     includeMarkets: true,
-    ...(params.cursor !== null && params.cursor.length > 0 ? { cursor: params.cursor } : {}),
+    ...(options?.pinned === true ? { pinned: true } : {}),
+    ...(params.cursor !== null && params.cursor.length > 0 && options?.pinned !== true
+      ? { cursor: params.cursor }
+      : {}),
   };
 }
 

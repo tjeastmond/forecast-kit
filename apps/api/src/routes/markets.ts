@@ -26,6 +26,7 @@ function parseMarketQuery(query: Record<string, unknown>) {
     limit: parseLimit(typeof query['limit'] === 'string' ? query['limit'] : undefined),
     cursor: typeof query['cursor'] === 'string' ? query['cursor'] : undefined,
     includeMetrics: parseBoolean(query['includeMetrics']) === true,
+    pinned: parseBoolean(query['pinned']),
   };
 }
 
@@ -97,6 +98,7 @@ export const eventRoutes: FastifyPluginCallback = (app, _opts, done) => {
     return app.query.events.listEvents({
       ...toMarketListFilters(marketQuery),
       includeMarkets,
+      ...(marketQuery.pinned === true ? { pinned: true } : {}),
     });
   });
 

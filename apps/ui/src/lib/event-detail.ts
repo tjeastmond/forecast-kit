@@ -26,6 +26,7 @@ export function marketComparisonRowEqual(a: MarketComparisonRow, b: MarketCompar
     a.volume === b.volume &&
     a.lastPrice === b.lastPrice &&
     a.isStale === b.isStale &&
+    a.isPinned === b.isPinned &&
     a.volume24h === b.volume24h &&
     a.liquidity === b.liquidity &&
     a.openInterest === b.openInterest &&
@@ -43,7 +44,9 @@ function eventMetadataEqual(a: EventDetailResponse, b: EventDetailResponse): boo
     a.eventTicker === b.eventTicker &&
     a.title === b.title &&
     a.subtitle === b.subtitle &&
-    a.category === b.category
+    a.category === b.category &&
+    a.isDirectlyPinned === b.isDirectlyPinned &&
+    a.isPinned === b.isPinned
   );
 }
 

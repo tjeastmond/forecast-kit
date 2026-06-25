@@ -1,12 +1,24 @@
 import { deriveFocusTags, marketExportV1Schema } from '@forecast-kit/core';
-import type { NormalizedMarket } from '@forecast-kit/core';
+import type { NormalizedEvent, NormalizedMarket } from '@forecast-kit/core';
 import { createQueryServices } from '@forecast-kit/db/query';
 import { createRepositories } from '@forecast-kit/db/repositories';
 import { createTestDatabase } from '@forecast-kit/db/test-utils';
 import Fastify from 'fastify';
 import { describe, expect, it } from 'vitest';
 import { corsPlugin } from '../plugins/cors.js';
-import { marketRoutes } from './markets.js';
+import { eventRoutes, marketRoutes } from './markets.js';
+
+const politicsEvent: NormalizedEvent = {
+  provider: 'kalshi',
+  externalEventId: 'KXPRES-24',
+  eventTicker: 'KXPRES-24',
+  seriesTicker: 'KXPRES',
+  title: '2024 Presidential Election',
+  subtitle: '',
+  category: 'Politics',
+  settlementSources: [],
+  rawJson: {},
+};
 
 const politicsMarket: NormalizedMarket = {
   provider: 'kalshi',
@@ -106,5 +118,29 @@ describe('API market routes', () => {
 
     expect(response.statusCode).toBe(204);
     expect(response.headers['access-control-allow-origin']).toBe('http://localhost:3848');
+  });
+});
+
+describe('API event routes', () => {
+  it('returns pinned events when pinned=true', async () => {
+    const db = createTestDatabase();
+    const repos = createRepositories(db);
+    await repos.events.upsert(politicsEvent);
+    await repos.pins.pin('kalshi', 'event', 'KXPRES-24');
+
+    const app = Fastify({ logger: false });
+    app.decorate('query', createQueryServices(db));
+    await app.register(eventRoutes);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/events?pinned=true&includeMarkets=true',
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body: { events: { eventTicker: string; isPinned: boolean }[] } = response.json();
+    expect(body.events).toHaveLength(1);
+    expect(body.events[0]?.eventTicker).toBe('KXPRES-24');
+    expect(body.events[0]?.isPinned).toBe(true);
   });
 });

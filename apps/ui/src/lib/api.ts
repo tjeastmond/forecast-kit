@@ -15,6 +15,7 @@ export interface MarketSummary {
   readonly volume: number;
   readonly lastPrice: number | null;
   readonly isStale: boolean;
+  readonly isPinned: boolean;
 }
 
 export interface MarketComparisonRow extends MarketSummary {
@@ -70,6 +71,7 @@ export interface MarketDetail {
   readonly lastSeenAt: string;
   readonly focusTags: readonly Focus[];
   readonly sides: readonly MarketSide[];
+  readonly isPinned?: boolean;
   readonly metrics?: {
     readonly spread: number | null;
     readonly midPrice: number | null;
@@ -84,6 +86,9 @@ export interface EventRow {
   readonly subtitle: string;
   readonly category: string | null;
   readonly markets?: readonly MarketSummary[];
+  readonly isPinned?: boolean;
+  readonly isDirectlyPinned?: boolean;
+  readonly pinnedAt?: string | null;
 }
 
 export interface EventListResponse {
@@ -93,6 +98,7 @@ export interface EventListResponse {
 
 export interface EventDetailResponse extends EventRow {
   readonly markets: readonly MarketComparisonRow[];
+  readonly isDirectlyPinned: boolean;
 }
 
 export interface SyncRunRow {
@@ -137,7 +143,8 @@ export interface MarketPatchBody {
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
-  if (!headers.has('Content-Type')) {
+  const hasBody = init?.body !== undefined && init.body !== null && init.body !== '';
+  if (hasBody && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -210,6 +217,7 @@ export async function fetchEvents(options: {
   limit?: number;
   cursor?: string;
   includeMarkets?: boolean;
+  pinned?: boolean;
 }): Promise<EventListResponse> {
   return apiFetch(
     `/events${buildQuery({
@@ -223,6 +231,7 @@ export async function fetchEvents(options: {
       limit: options.limit?.toString(),
       cursor: options.cursor,
       includeMarkets: options.includeMarkets === true ? 'true' : undefined,
+      pinned: options.pinned === true ? 'true' : undefined,
     })}`,
   );
 }
@@ -242,6 +251,30 @@ export async function updateFocusTags(ticker: string, focusTags: readonly Focus[
   return apiFetch(`/admin/markets/${encodeURIComponent(ticker)}/focus-tags`, {
     method: 'PUT',
     body: JSON.stringify({ focusTags }),
+  });
+}
+
+export async function pinEvent(eventTicker: string): Promise<EventDetailResponse> {
+  return apiFetch(`/admin/events/${encodeURIComponent(eventTicker)}/pin`, {
+    method: 'PUT',
+  });
+}
+
+export async function unpinEvent(eventTicker: string): Promise<EventDetailResponse> {
+  return apiFetch(`/admin/events/${encodeURIComponent(eventTicker)}/pin`, {
+    method: 'DELETE',
+  });
+}
+
+export async function pinMarket(ticker: string): Promise<MarketDetail> {
+  return apiFetch(`/admin/markets/${encodeURIComponent(ticker)}/pin`, {
+    method: 'PUT',
+  });
+}
+
+export async function unpinMarket(ticker: string): Promise<MarketDetail> {
+  return apiFetch(`/admin/markets/${encodeURIComponent(ticker)}/pin`, {
+    method: 'DELETE',
   });
 }
 

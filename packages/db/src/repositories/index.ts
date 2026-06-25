@@ -8,12 +8,13 @@ import type {
 } from '@forecast-kit/core';
 import { pickDefined } from '@forecast-kit/core';
 import type { Focus } from '@forecast-kit/core';
-import { and, eq, isNotNull, notInArray, or, desc, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, notInArray, or, desc, sql } from 'drizzle-orm';
 import {
   events,
   marketFocusTags,
   marketSides,
   markets,
+  pinnedItems,
   providerCategories,
   providerCategoryTags,
   providerSeries,
@@ -511,6 +512,173 @@ export class TaxonomyRepository {
   }
 }
 
+export type PinTargetType = 'event' | 'market';
+
+export class PinRepository {
+  constructor(private readonly _db: DatabaseClient) {}
+
+  async pin(provider: ProviderId, targetType: PinTargetType, targetTicker: string): Promise<void> {
+    const now = isoNow();
+    await this._db
+      .insert(pinnedItems)
+      .values({
+        provider,
+        targetType,
+        targetTicker,
+        pinnedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [pinnedItems.provider, pinnedItems.targetType, pinnedItems.targetTicker],
+        set: { pinnedAt: now },
+      });
+  }
+
+  async unpin(provider: ProviderId, targetType: PinTargetType, targetTicker: string): Promise<void> {
+    await this._db
+      .delete(pinnedItems)
+      .where(
+        and(
+          eq(pinnedItems.provider, provider),
+          eq(pinnedItems.targetType, targetType),
+          eq(pinnedItems.targetTicker, targetTicker),
+        ),
+      );
+  }
+
+  async isPinned(provider: ProviderId, targetType: PinTargetType, targetTicker: string): Promise<boolean> {
+    const [row] = await this._db
+      .select({ id: pinnedItems.id })
+      .from(pinnedItems)
+      .where(
+        and(
+          eq(pinnedItems.provider, provider),
+          eq(pinnedItems.targetType, targetType),
+          eq(pinnedItems.targetTicker, targetTicker),
+        ),
+      )
+      .limit(1);
+
+    return row !== undefined;
+  }
+
+  async getPinnedEventTickers(provider: ProviderId): Promise<string[]> {
+    const directRows = await this._db
+      .select({ eventTicker: pinnedItems.targetTicker })
+      .from(pinnedItems)
+      .where(and(eq(pinnedItems.provider, provider), eq(pinnedItems.targetType, 'event')));
+
+    const marketRows = await this._db
+      .select({ eventTicker: markets.eventTicker })
+      .from(pinnedItems)
+      .innerJoin(markets, and(eq(markets.provider, pinnedItems.provider), eq(markets.ticker, pinnedItems.targetTicker)))
+      .where(and(eq(pinnedItems.provider, provider), eq(pinnedItems.targetType, 'market')));
+
+    const tickers = new Set<string>();
+    for (const row of directRows) {
+      tickers.add(row.eventTicker);
+    }
+    for (const row of marketRows) {
+      tickers.add(row.eventTicker);
+    }
+
+    return [...tickers].sort((left, right) => left.localeCompare(right));
+  }
+
+  async getPinnedAtByEventTicker(provider: ProviderId, eventTickers: readonly string[]): Promise<Map<string, string>> {
+    const pinnedAtByEvent = new Map<string, string>();
+    if (eventTickers.length === 0) {
+      return pinnedAtByEvent;
+    }
+
+    const directRows = await this._db
+      .select({ eventTicker: pinnedItems.targetTicker, pinnedAt: pinnedItems.pinnedAt })
+      .from(pinnedItems)
+      .where(
+        and(
+          eq(pinnedItems.provider, provider),
+          eq(pinnedItems.targetType, 'event'),
+          inArray(pinnedItems.targetTicker, [...eventTickers]),
+        ),
+      );
+
+    for (const row of directRows) {
+      const existing = pinnedAtByEvent.get(row.eventTicker);
+      if (existing === undefined || row.pinnedAt > existing) {
+        pinnedAtByEvent.set(row.eventTicker, row.pinnedAt);
+      }
+    }
+
+    const marketRows = await this._db
+      .select({ eventTicker: markets.eventTicker, pinnedAt: pinnedItems.pinnedAt })
+      .from(pinnedItems)
+      .innerJoin(markets, and(eq(markets.provider, pinnedItems.provider), eq(markets.ticker, pinnedItems.targetTicker)))
+      .where(
+        and(
+          eq(pinnedItems.provider, provider),
+          eq(pinnedItems.targetType, 'market'),
+          inArray(markets.eventTicker, [...eventTickers]),
+        ),
+      );
+
+    for (const row of marketRows) {
+      const existing = pinnedAtByEvent.get(row.eventTicker);
+      if (existing === undefined || row.pinnedAt > existing) {
+        pinnedAtByEvent.set(row.eventTicker, row.pinnedAt);
+      }
+    }
+
+    return pinnedAtByEvent;
+  }
+
+  async getPinnedMarketTickers(provider: ProviderId, tickers: readonly string[]): Promise<Set<string>> {
+    const pinned = new Set<string>();
+    if (tickers.length === 0) {
+      return pinned;
+    }
+
+    const rows = await this._db
+      .select({ targetTicker: pinnedItems.targetTicker })
+      .from(pinnedItems)
+      .where(
+        and(
+          eq(pinnedItems.provider, provider),
+          eq(pinnedItems.targetType, 'market'),
+          inArray(pinnedItems.targetTicker, [...tickers]),
+        ),
+      );
+
+    for (const row of rows) {
+      pinned.add(row.targetTicker);
+    }
+
+    return pinned;
+  }
+
+  async getDirectlyPinnedEventTickers(provider: ProviderId, eventTickers: readonly string[]): Promise<Set<string>> {
+    const pinned = new Set<string>();
+    if (eventTickers.length === 0) {
+      return pinned;
+    }
+
+    const rows = await this._db
+      .select({ targetTicker: pinnedItems.targetTicker })
+      .from(pinnedItems)
+      .where(
+        and(
+          eq(pinnedItems.provider, provider),
+          eq(pinnedItems.targetType, 'event'),
+          inArray(pinnedItems.targetTicker, [...eventTickers]),
+        ),
+      );
+
+    for (const row of rows) {
+      pinned.add(row.targetTicker);
+    }
+
+    return pinned;
+  }
+}
+
 export function createRepositories(db: DatabaseClient) {
   return {
     events: new EventRepository(db),
@@ -520,6 +688,7 @@ export function createRepositories(db: DatabaseClient) {
     syncRuns: new SyncRunRepository(db),
     syncState: new SyncStateRepository(db),
     taxonomy: new TaxonomyRepository(db),
+    pins: new PinRepository(db),
   };
 }
 

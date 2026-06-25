@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Pinned homepage at `/` — pin events or markets from the explorer; pinned events appear on the home feed with the same filters as `/events` (market pins surface the parent event)
+- Admin pin API: `PUT`/`DELETE` `/admin/events/:eventTicker/pin` and `/admin/markets/:ticker/pin`; public read via `GET /events?pinned=true`
+- SQLite `pinned_items` table (sync-safe local curation, separate from Kalshi upserts)
+
 ### Changed
 
 - Docs: split pre-commit vs pre-push checks — `bun run build` required only before push to GitHub, not on every commit or during normal local iteration
@@ -29,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Removed unused `setCursorStack` from `useEventListParams` public API; wrapped `SyncAdminDialog.handleSync` in `useCallback`
+- Explorer `CopyIdRow` uses an inline `<span>` root so market cards can render copy controls inside metadata text without invalid `<div>`-in-`<p>` hydration errors
 
 ### Fixed
 

@@ -190,6 +190,23 @@ export const syncState = sqliteTable('sync_state', {
     .default(sql`(datetime('now'))`),
 });
 
+export const pinnedItems = sqliteTable(
+  'pinned_items',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    provider: text('provider').notNull(),
+    targetType: text('target_type').notNull(),
+    targetTicker: text('target_ticker').notNull(),
+    pinnedAt: text('pinned_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    uniqueIndex('pinned_items_provider_target_unique').on(table.provider, table.targetType, table.targetTicker),
+    index('pinned_items_pinned_at_idx').on(table.pinnedAt),
+  ],
+);
+
 export type EventRow = typeof events.$inferSelect;
 export type MarketRow = typeof markets.$inferSelect;
 export type MarketSideRow = typeof marketSides.$inferSelect;
@@ -199,3 +216,4 @@ export type ProviderCategoryRow = typeof providerCategories.$inferSelect;
 export type ProviderCategoryTagRow = typeof providerCategoryTags.$inferSelect;
 export type ProviderSeriesRow = typeof providerSeries.$inferSelect;
 export type SyncStateRow = typeof syncState.$inferSelect;
+export type PinnedItemRow = typeof pinnedItems.$inferSelect;

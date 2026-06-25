@@ -1,5 +1,11 @@
-import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
+import { EventListPageFallback } from '@/components/EventListPageClient';
+import { PinnedPageClient } from '@/components/PinnedPageClient';
 
 export default function HomePage() {
-  redirect('/events');
+  return (
+    <Suspense fallback={<EventListPageFallback />}>
+      <PinnedPageClient />
+    </Suspense>
+  );
 }

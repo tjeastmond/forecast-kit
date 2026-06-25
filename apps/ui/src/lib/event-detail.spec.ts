@@ -16,6 +16,7 @@ function makeMarket(overrides: Partial<MarketComparisonRow> = {}): MarketCompari
     volume: 100,
     lastPrice: 0.42,
     isStale: false,
+    isPinned: false,
     volume24h: 10,
     liquidity: 5,
     openInterest: 20,
@@ -35,6 +36,7 @@ function makeEvent(markets: readonly MarketComparisonRow[]): EventDetailResponse
     title: 'Test Event',
     subtitle: '',
     category: 'Politics',
+    isDirectlyPinned: false,
     markets,
   };
 }

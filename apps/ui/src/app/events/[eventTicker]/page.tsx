@@ -8,10 +8,11 @@ import { AppShell } from '@/components/AppShell';
 import { EventSyncButton } from '@/components/EventSyncButton';
 import { MarketCard } from '@/components/MarketCard';
 import { MarketDetailSheet } from '@/components/MarketDetailSheet';
+import { PinButton } from '@/components/PinButton';
 import { Card } from '@/components/ui/card';
 import { fetchEventDetail, type EventDetailResponse } from '@/lib/api';
 import { reconcileEventDetail, sortEventMarkets } from '@/lib/event-detail';
-import { readEventsListReturn } from '@/lib/marketFilterParams';
+import { readListBackLink } from '@/lib/marketFilterParams';
 
 export default function EventDetailPage() {
   const params = useParams<{ eventTicker: string }>();
@@ -20,10 +21,10 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [eventsHref, setEventsHref] = useState('/events');
+  const [backLink, setBackLink] = useState({ href: '/events', label: 'Events' });
 
   useEffect(() => {
-    setEventsHref(`/events${readEventsListReturn()}`);
+    setBackLink(readListBackLink());
   }, []);
   const hasLoadedRef = useRef(false);
 
@@ -79,10 +80,37 @@ export default function EventDetailPage() {
     void refreshAfterSync();
   }, [refreshAfterSync]);
 
+  const handleMarketPinChange = useCallback((ticker: string, pinned: boolean) => {
+    setEvent((previous) => {
+      if (!previous) {
+        return previous;
+      }
+      return {
+        ...previous,
+        markets: previous.markets.map((market) =>
+          market.ticker === ticker ? { ...market, isPinned: pinned } : market,
+        ),
+      };
+    });
+  }, []);
+
+  const handleEventPinChange = useCallback((pinned: boolean) => {
+    setEvent((previous) => {
+      if (!previous) {
+        return previous;
+      }
+      return {
+        ...previous,
+        isDirectlyPinned: pinned,
+        isPinned: pinned || previous.markets.some((market) => market.isPinned),
+      };
+    });
+  }, []);
+
   return (
     <AppShell>
-      <Link href={eventsHref} className="text-muted-foreground mb-4 inline-block text-sm">
-        ← Events
+      <Link href={backLink.href} className="text-muted-foreground mb-4 inline-block text-sm">
+        ← {backLink.label}
       </Link>
       {isInitialLoad ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
       {event ? (
@@ -96,12 +124,20 @@ export default function EventDetailPage() {
                 {markets.length > 0 ? ` · ${String(markets.length)} markets` : ''}
               </p>
             </div>
-            <EventSyncButton eventTicker={event.eventTicker} onSynced={handleSynced} />
+            <div className="flex items-center gap-2">
+              <PinButton
+                targetType="event"
+                ticker={event.eventTicker}
+                pinned={event.isDirectlyPinned}
+                onPinChange={handleEventPinChange}
+              />
+              <EventSyncButton eventTicker={event.eventTicker} onSynced={handleSynced} />
+            </div>
           </div>
 
           <div className="space-y-4">
             {markets.map((market) => (
-              <MarketCard key={market.ticker} market={market} onOpen={openMarket} />
+              <MarketCard key={market.ticker} market={market} onOpen={openMarket} onPinChange={handleMarketPinChange} />
             ))}
             {!isInitialLoad && markets.length === 0 ? (
               <Card className="p-8 text-center">

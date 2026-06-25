@@ -1,7 +1,8 @@
-import type { Focus } from '@forecast-kit/core';
+import type { Focus, ProviderId } from '@forecast-kit/core';
 import { deriveMarketMetrics, pickDefined } from '@forecast-kit/core';
 import { and, asc, desc, eq, gt, inArray, like, lt, notInArray, or, sql } from 'drizzle-orm';
 import type { DatabaseClient } from '../database-client.js';
+import { PinRepository } from '../repositories/index.js';
 import { events, marketFocusTags, marketSides, markets, syncRuns } from '../schema/index.js';
 import type { MarketRow, SyncRunRow } from '../schema/index.js';
 
@@ -33,6 +34,7 @@ export interface MarketSummary {
   readonly volume: number;
   readonly lastPrice: number | null;
   readonly isStale: boolean;
+  readonly isPinned: boolean;
 }
 
 export interface MarketComparisonRow extends MarketSummary {
@@ -55,6 +57,7 @@ export interface MarketDetail extends MarketRow {
   readonly focusTags: readonly Focus[];
   readonly sides: readonly (typeof marketSides.$inferSelect)[];
   readonly event: typeof events.$inferSelect | null;
+  readonly isPinned: boolean;
 }
 
 const DEFAULT_LIMIT = 50;
@@ -97,6 +100,103 @@ async function loadFocusTagsForMarkets(
   }
 
   return tagMap;
+}
+
+async function loadPinnedStateForMarkets(
+  db: DatabaseClient,
+  marketRows: readonly { readonly provider: string; readonly ticker: string }[],
+): Promise<Set<string>> {
+  const pinned = new Set<string>();
+  if (marketRows.length === 0) {
+    return pinned;
+  }
+
+  const byProvider = new Map<ProviderId, string[]>();
+  for (const row of marketRows) {
+    const provider = row.provider as ProviderId;
+    const tickers = byProvider.get(provider) ?? [];
+    tickers.push(row.ticker);
+    byProvider.set(provider, tickers);
+  }
+
+  const pinRepo = new PinRepository(db);
+  for (const [provider, tickers] of byProvider) {
+    const providerPinned = await pinRepo.getPinnedMarketTickers(provider, tickers);
+    for (const ticker of providerPinned) {
+      pinned.add(ticker);
+    }
+  }
+
+  return pinned;
+}
+
+function withMarketPinState<T extends MarketSummary>(summaries: readonly T[], pinnedTickers: ReadonlySet<string>): T[] {
+  return summaries.map((summary) => ({
+    ...summary,
+    isPinned: pinnedTickers.has(summary.ticker),
+  }));
+}
+
+async function enrichEventsWithPinState(
+  db: DatabaseClient,
+  eventRows: readonly (typeof events.$inferSelect)[],
+): Promise<
+  Array<
+    typeof events.$inferSelect & {
+      isPinned: boolean;
+      isDirectlyPinned: boolean;
+      pinnedAt: string | null;
+    }
+  >
+> {
+  if (eventRows.length === 0) {
+    return [];
+  }
+
+  const providers = [...new Set(eventRows.map((row) => row.provider as ProviderId))];
+  const pinnedAtByEvent = new Map<string, string>();
+  const directlyPinned = new Set<string>();
+
+  for (const provider of providers) {
+    const tickersForProvider = eventRows.filter((row) => row.provider === provider).map((row) => row.eventTicker);
+    const pinnedAtMap = await new PinRepository(db).getPinnedAtByEventTicker(provider, tickersForProvider);
+    for (const [eventTicker, pinnedAt] of pinnedAtMap) {
+      pinnedAtByEvent.set(`${provider}:${eventTicker}`, pinnedAt);
+    }
+    const directSet = await new PinRepository(db).getDirectlyPinnedEventTickers(provider, tickersForProvider);
+    for (const eventTicker of directSet) {
+      directlyPinned.add(`${provider}:${eventTicker}`);
+    }
+  }
+
+  return eventRows.map((event) => {
+    const key = `${event.provider}:${event.eventTicker}`;
+    const pinnedAt = pinnedAtByEvent.get(key) ?? null;
+    return {
+      ...event,
+      isPinned: pinnedAt !== null,
+      isDirectlyPinned: directlyPinned.has(key),
+      pinnedAt,
+    };
+  });
+}
+
+async function enrichSingleEvent(
+  db: DatabaseClient,
+  event: typeof events.$inferSelect,
+): Promise<
+  typeof events.$inferSelect & {
+    isPinned: boolean;
+    isDirectlyPinned: boolean;
+    pinnedAt: string | null;
+  }
+> {
+  const enriched = await enrichEventsWithPinState(db, [event]);
+  const enrichedEvent = enriched[0];
+  if (!enrichedEvent) {
+    throw new Error(`Failed to enrich event ${event.eventTicker}`);
+  }
+  return enrichedEvent;
 }
 
 export class MarketQueryService {
@@ -222,21 +322,26 @@ export class MarketQueryService {
       this._db,
       pageRows.map((row) => row.id),
     );
+    const pinnedTickers = await loadPinnedStateForMarkets(this._db, pageRows);
 
-    const summaries: MarketSummary[] = pageRows.map((row) => ({
-      id: row.id,
-      ticker: row.ticker,
-      eventTicker: row.eventTicker,
-      title: row.title,
-      subtitle: row.subtitle,
-      status: row.status,
-      closeTime: row.closeTime,
-      category: row.category,
-      focusTags: tagMap.get(row.id) ?? [],
-      volume: row.volume,
-      lastPrice: row.lastPrice,
-      isStale: row.isStale,
-    }));
+    const summaries: MarketSummary[] = withMarketPinState(
+      pageRows.map((row) => ({
+        id: row.id,
+        ticker: row.ticker,
+        eventTicker: row.eventTicker,
+        title: row.title,
+        subtitle: row.subtitle,
+        status: row.status,
+        closeTime: row.closeTime,
+        category: row.category,
+        focusTags: tagMap.get(row.id) ?? [],
+        volume: row.volume,
+        lastPrice: row.lastPrice,
+        isStale: row.isStale,
+        isPinned: false,
+      })),
+      pinnedTickers,
+    );
 
     const lastRow = pageRows[pageRows.length - 1];
     const nextCursor = hasMore && lastRow ? encodeCursor(lastRow.id) : null;
@@ -303,6 +408,7 @@ export class MarketQueryService {
       this._db,
       rows.map((row) => row.id),
     );
+    const pinnedTickers = await loadPinnedStateForMarkets(this._db, rows);
 
     for (const row of rows) {
       const summary: MarketSummary = {
@@ -318,6 +424,7 @@ export class MarketQueryService {
         volume: row.volume,
         lastPrice: row.lastPrice,
         isStale: row.isStale,
+        isPinned: pinnedTickers.has(row.ticker),
       };
       const list = grouped.get(row.eventTicker) ?? [];
       list.push(summary);
@@ -341,11 +448,14 @@ export class MarketQueryService {
 
     const [event] = await this._db.select().from(events).where(eq(events.eventTicker, market.eventTicker)).limit(1);
 
+    const pinnedTickers = await loadPinnedStateForMarkets(this._db, [market]);
+
     return {
       ...market,
       focusTags: tagRows.map((row) => row.focus as Focus),
       sides,
       event: event ?? null,
+      isPinned: pinnedTickers.has(market.ticker),
     };
   }
 }
@@ -361,6 +471,7 @@ export interface EventListOptions {
   readonly limit?: number;
   readonly cursor?: string;
   readonly includeMarkets?: boolean;
+  readonly pinned?: boolean;
 }
 
 export class EventQueryService {
@@ -369,6 +480,7 @@ export class EventQueryService {
   async listEvents(options: EventListOptions = {}) {
     const limit = clampLimit(options.limit);
     const whereParts = [];
+    const pinRepo = new PinRepository(this._db);
     const hasMarketFilters = Boolean(
       options.focus?.length ||
       options.exclude?.length ||
@@ -378,12 +490,20 @@ export class EventQueryService {
       options.stale !== undefined,
     );
 
+    if (options.pinned === true) {
+      const pinnedTickers = await pinRepo.getPinnedEventTickers('kalshi');
+      if (pinnedTickers.length === 0) {
+        return { events: [], cursor: null };
+      }
+      whereParts.push(inArray(events.eventTicker, pinnedTickers));
+    }
+
     if (options.q) {
       const pattern = `%${options.q}%`;
       whereParts.push(or(like(events.title, pattern), like(events.eventTicker, pattern)));
     }
 
-    if (options.cursor) {
+    if (options.pinned !== true && options.cursor) {
       const cursorId = decodeCursor(options.cursor);
       if (cursorId !== null) {
         whereParts.push(gt(events.id, cursorId));
@@ -414,15 +534,36 @@ export class EventQueryService {
 
     const whereClause = whereParts.length > 0 ? and(...whereParts) : undefined;
 
-    const rows = await this._db
-      .select()
-      .from(events)
-      .where(whereClause)
-      .orderBy(asc(events.id))
-      .limit(limit + 1);
+    let pageRows: (typeof events.$inferSelect)[];
+    let nextCursor: string | null = null;
 
-    const hasMore = rows.length > limit;
-    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    if (options.pinned === true) {
+      const rows = await this._db.select().from(events).where(whereClause).orderBy(asc(events.id));
+      const pinnedAtMap = await pinRepo.getPinnedAtByEventTicker(
+        'kalshi',
+        rows.map((event) => event.eventTicker),
+      );
+      const sortedRows = [...rows].sort((left, right) => {
+        const leftPinnedAt = pinnedAtMap.get(left.eventTicker) ?? '';
+        const rightPinnedAt = pinnedAtMap.get(right.eventTicker) ?? '';
+        if (leftPinnedAt !== rightPinnedAt) {
+          return rightPinnedAt.localeCompare(leftPinnedAt);
+        }
+        return left.id - right.id;
+      });
+      pageRows = sortedRows.slice(0, limit);
+    } else {
+      const rows = await this._db
+        .select()
+        .from(events)
+        .where(whereClause)
+        .orderBy(asc(events.id))
+        .limit(limit + 1);
+      const hasMore = rows.length > limit;
+      pageRows = hasMore ? rows.slice(0, limit) : rows;
+      const lastRow = pageRows[pageRows.length - 1];
+      nextCursor = hasMore && lastRow ? encodeCursor(lastRow.id) : null;
+    }
 
     let marketsByEvent: Map<string, MarketSummary[]> | undefined;
     if (options.includeMarkets && pageRows.length > 0 && marketQuery) {
@@ -432,9 +573,11 @@ export class EventQueryService {
       );
     }
 
-    const result = pageRows.map((event) => {
+    const enrichedEvents = await enrichEventsWithPinState(this._db, pageRows);
+
+    const result = enrichedEvents.map((event) => {
       if (!options.includeMarkets) {
-        return { ...event };
+        return event;
       }
       return {
         ...event,
@@ -442,8 +585,6 @@ export class EventQueryService {
       };
     });
 
-    const lastRow = pageRows[pageRows.length - 1];
-    const nextCursor = hasMore && lastRow ? encodeCursor(lastRow.id) : null;
     return { events: result, cursor: nextCursor };
   }
 
@@ -467,16 +608,18 @@ export class EventQueryService {
     });
 
     if (!options.includeMetrics) {
+      const enrichedEvent = await enrichSingleEvent(this._db, event);
       return {
-        ...event,
+        ...enrichedEvent,
         markets: eventMarkets,
       };
     }
 
     const tickers = eventMarkets.map((market) => market.ticker);
     if (tickers.length === 0) {
+      const enrichedEvent = await enrichSingleEvent(this._db, event);
       return {
-        ...event,
+        ...enrichedEvent,
         markets: [] as MarketComparisonRow[],
       };
     }
@@ -510,8 +653,10 @@ export class EventQueryService {
       ];
     });
 
+    const enrichedEvent = await enrichSingleEvent(this._db, event);
+
     return {
-      ...event,
+      ...enrichedEvent,
       markets: comparisonMarkets,
     };
   }

@@ -14,6 +14,7 @@ Set `NEXT_PUBLIC_FORECAST_KIT_API_URL` only if bypassing the built-in `/api` pro
 
 ## Patterns
 
+- **Pinned home** at `/` shows pinned events (same filters as `/events`); **Browse All Events** at `/events`.
 - **Lean cards** on `/markets` and `/events`; full detail in `MarketDetailSheet` (fetches `/markets/:ticker` + `/export`).
 - **Event comparison** at `/events/[eventTicker]` with CSS implied-% bars.
 - Sync dialog for Kalshi sync runs; admin market edits remain API-only.

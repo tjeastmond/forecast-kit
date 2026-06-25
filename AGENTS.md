@@ -41,7 +41,7 @@ SQLite (Drizzle) — ./data/forecast-kit.db
       ↓
 ┌─────────────┬──────────────┬─────────────────────────────────────────┐
 │  Fastify    │  Ink CLI     │  Next.js UI (:3848)                     │
-│  :3847      │  sync, list  │  events-first explorer (/events default)  │
+│  :3847      │  sync, list  │  pinned home at `/`; browse at `/events`  │
 │  /markets   │  events,     │  event detail + market cards + sheet    │
 │  /events    │  inspect     │  /api/* rewrites → Fastify (same-origin)│
 │  /taxonomy  │              │                                         │
@@ -248,24 +248,28 @@ Use `--no-ui` for scripts and CI. Interactive sync uses Ink (`SyncApp.tsx`). CLI
 
 Base URL: `http://127.0.0.1:3847`
 
-| Method  | Path                                | Notes                                                                                   |
-| ------- | ----------------------------------- | --------------------------------------------------------------------------------------- |
-| `GET`   | `/health`                           | `{ status, db }`                                                                        |
-| `GET`   | `/markets`                          | Query: `focus`, `exclude`, `category`, `tag`, `status`, `stale`, `q`, `limit`, `cursor` |
-| `GET`   | `/markets/:ticker`                  | Full detail; `?includeMetrics=true` adds spread/mid/implied                             |
-| `GET`   | `/markets/:ticker/export`           | Agent export JSON schema v1.0 (spread, mid, implied prob)                               |
-| `GET`   | `/events`                           | Same filters; `?includeMarkets=true`                                                    |
-| `GET`   | `/events/:eventTicker`              | Event + markets; `?includeMetrics=true` for comparison columns                          |
-| `POST`  | `/events/:eventTicker/sync`         | Refresh one event and its markets from Kalshi                                           |
-| `GET`   | `/taxonomy`                         | Kalshi categories + tags from last taxonomy sync (lazy-syncs if empty)                  |
-| `GET`   | `/taxonomy/tags`                    | Tags for a category (`?category=`, `?provider=`)                                        |
-| `GET`   | `/taxonomy/series`                  | Browse synced series (`?category=`, `?limit=`)                                          |
-| `POST`  | `/sync`                             | Body: `{ provider, focus, exclude, maxPages, full }` → background sync                  |
-| `POST`  | `/sync/taxonomy`                    | Refresh Kalshi category/tag/series metadata (`{ full?: boolean }`)                      |
-| `GET`   | `/sync`                             | Paginated sync run list                                                                 |
-| `GET`   | `/sync/:id`                         | Sync run status and counts                                                              |
-| `PATCH` | `/admin/markets/:ticker`            | Focused manual edits (local dev only)                                                   |
-| `PUT`   | `/admin/markets/:ticker/focus-tags` | Replace focus tags                                                                      |
+| Method   | Path                                | Notes                                                                                   |
+| -------- | ----------------------------------- | --------------------------------------------------------------------------------------- |
+| `GET`    | `/health`                           | `{ status, db }`                                                                        |
+| `GET`    | `/markets`                          | Query: `focus`, `exclude`, `category`, `tag`, `status`, `stale`, `q`, `limit`, `cursor` |
+| `GET`    | `/markets/:ticker`                  | Full detail; `?includeMetrics=true` adds spread/mid/implied                             |
+| `GET`    | `/markets/:ticker/export`           | Agent export JSON schema v1.0 (spread, mid, implied prob)                               |
+| `GET`    | `/events`                           | Same filters; `?includeMarkets=true`; `?pinned=true` for pinned home feed only          |
+| `GET`    | `/events/:eventTicker`              | Event + markets; `?includeMetrics=true` for comparison columns                          |
+| `POST`   | `/events/:eventTicker/sync`         | Refresh one event and its markets from Kalshi                                           |
+| `GET`    | `/taxonomy`                         | Kalshi categories + tags from last taxonomy sync (lazy-syncs if empty)                  |
+| `GET`    | `/taxonomy/tags`                    | Tags for a category (`?category=`, `?provider=`)                                        |
+| `GET`    | `/taxonomy/series`                  | Browse synced series (`?category=`, `?limit=`)                                          |
+| `POST`   | `/sync`                             | Body: `{ provider, focus, exclude, maxPages, full }` → background sync                  |
+| `POST`   | `/sync/taxonomy`                    | Refresh Kalshi category/tag/series metadata (`{ full?: boolean }`)                      |
+| `GET`    | `/sync`                             | Paginated sync run list                                                                 |
+| `GET`    | `/sync/:id`                         | Sync run status and counts                                                              |
+| `PATCH`  | `/admin/markets/:ticker`            | Focused manual edits (local dev only)                                                   |
+| `PUT`    | `/admin/markets/:ticker/focus-tags` | Replace focus tags                                                                      |
+| `PUT`    | `/admin/events/:eventTicker/pin`    | Pin event for pinned home feed (`/`)                                                    |
+| `DELETE` | `/admin/events/:eventTicker/pin`    | Unpin event                                                                             |
+| `PUT`    | `/admin/markets/:ticker/pin`        | Pin market (surfaces parent event on `/`)                                               |
+| `DELETE` | `/admin/markets/:ticker/pin`        | Unpin market                                                                            |
 
 List endpoints paginate with opaque base64url cursors (market/event id).
 
@@ -294,6 +298,7 @@ List endpoints paginate with opaque base64url cursors (market/event id).
 | `markets`                 | Normalized markets + pricing columns; `is_stale` after full sync                                       | unique `(provider, ticker)`                     |
 | `market_sides`            | YES/NO (or other) investable sides                                                                     | unique `(market_id, side)`                      |
 | `market_focus_tags`       | Derived focus labels per market                                                                        | unique `(market_id, focus)`                     |
+| `pinned_items`            | Local pin state for events/markets (not touched by sync)                                               | unique `(provider, target_type, target_ticker)` |
 | `market_focus_tags.focus` | One of: politics, politicians, mentions, weather, economics, technology, crypto, entertainment, sports | enum in `FOCUS_VALUES`                          |
 | `sync_runs`               | Sync audit trail                                                                                       | status: running \| success \| partial \| failed |
 | `provider_categories`     | Kalshi categories from taxonomy sync                                                                   | unique `(provider, category)`                   |
