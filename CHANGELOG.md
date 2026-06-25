@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Docs: split pre-commit vs pre-push checks — `bun run build` required only before push to GitHub, not on every commit or during normal local iteration
 - `@forecast-kit/db`: batch event market queries, single `MarketQueryService` in `listEvents`, `UPDATE … RETURNING` for admin partial updates, batch taxonomy series upsert, `PRAGMA foreign_keys = ON`, shared `parseTagsJson` / `pickDefined`, and canonical `TaxonomySeriesRow` on the taxonomy module
 - API routes: shared `parseLimit` helper, `pickDefined` for optional query/body fields, and lighter admin focus-tag lookup before response fetch
 

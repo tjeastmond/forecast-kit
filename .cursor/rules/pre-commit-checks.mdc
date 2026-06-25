@@ -1,15 +1,33 @@
 ---
-description: Run format, typecheck, lint, test, and build before commit or push; never push on failure
+description: Run format, typecheck, lint, test before commit; add build before push to GitHub
 alwaysApply: true
 ---
 
 # Pre-commit and pre-push checks
 
-Before **every commit** and **every push**, run the full check suite from the repo root. **Do not commit or push** if any step fails.
+## Before commit (local)
 
-**If this is a push to GitHub, or if we're committing to GitHub right now, run this check.** The full gate — including `bun run build` — applies before any GitHub push or any commit intended for a PR on GitHub, not only immediately before merge.
+Before **every commit**, run the check suite below from the repo root. **Do not commit** if any step fails. **`bun run build` is not required before commit.**
 
-## Required sequence (Bun)
+Run in order; stop on first failure, fix, then re-run from the top:
+
+```bash
+bun run format
+bun run typecheck
+bun run lint
+bun run test
+```
+
+| Step      | Command             | Purpose                                                  |
+| --------- | ------------------- | -------------------------------------------------------- |
+| Format    | `bun run format`    | Prettier; stage any formatting changes before commit     |
+| Typecheck | `bun run typecheck` | `tsc --build` across project references                  |
+| Lint      | `bun run lint`      | ESLint (strict TypeScript rules)                         |
+| Test      | `bun run test`      | Vitest (`**/*.spec.ts`)                                  |
+
+## Before push to GitHub
+
+Before **every push to GitHub** (including commit-and-push, opening or updating a PR, or pushing commits intended for a PR), run the **full gate** — the commit sequence **plus** `bun run build`. **Do not push** if any step fails.
 
 Run in order; stop on first failure, fix, then re-run from the top:
 
@@ -21,31 +39,26 @@ bun run test
 bun run build
 ```
 
-| Step | Command | Purpose |
-| ---- | ------- | ------- |
-| Format | `bun run format` | Prettier; stage any formatting changes before commit |
-| Typecheck | `bun run typecheck` | `tsc --build` across project references |
-| Lint | `bun run lint` | ESLint (strict TypeScript rules) |
-| Test | `bun run test` | Vitest (`**/*.spec.ts`) |
-| Build | `bun run build` | Compile CLI, API, packages, and explorer UI (`ui:build`) |
+| Step  | Command          | Purpose                                                      |
+| ----- | ---------------- | ------------------------------------------------------------ |
+| Build | `bun run build`  | Compile CLI, API, packages, and explorer UI (`ui:build`)   |
 
 ## Gate rules
 
-- **No commit** while any check is failing.
-- **No push** while any check is failing — even if a commit already exists locally, fix failures first or revert; do not publish broken state to the remote.
+- **No commit** while any pre-commit step is failing.
+- **No push to GitHub** while any pre-push step is failing — even if a commit already exists locally, fix failures first or revert; do not publish broken state to the remote.
 - After `format` modifies files, include those changes in the same commit.
-- Re-run the **full** sequence after fixes (not only the step that failed).
+- Re-run the **full applicable sequence** after fixes (not only the step that failed).
 
 ## When to run
 
-- Before `git commit`
-- Before `git push` (including when the user asks to commit-and-push)
-- Before opening or updating a PR on GitHub
-- After significant code changes, before handing off work
+- **Before commit:** format, typecheck, lint, test
+- **Before push to GitHub:** format, typecheck, lint, test, build (including when the user asks to commit-and-push — run build before the push)
+- **During local iteration** (testers, linters, handoff checks): format, typecheck, lint, test — build optional
 
 ## On failure
 
 1. Stop immediately.
 2. Read and fix the reported errors.
-3. Re-run all five commands from the beginning.
+3. Re-run all steps in the applicable sequence from the beginning.
 4. Only then commit or push.
