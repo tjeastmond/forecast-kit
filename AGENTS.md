@@ -167,7 +167,8 @@ Run all commands from the repo root with **Bun**.
 | `serve`        | `bun run apps/api/src/index.ts`                      | Start Fastify API on `127.0.0.1:3847`                        |
 | `ui`           | `bun run scripts/dev-explore.ts`                     | Clean `.next`, start API + UI; SIGTERM/SIGINT stops both     |
 | `ui:app`       | `bun run --filter @forecast-kit/ui dev`              | Clean `.next`, Next.js UI only (API must already be running) |
-| `ui:build`     | `bun run --filter @forecast-kit/ui build`            | Production build of explorer UI                              |
+| `ui:build`     | `bun run --filter @forecast-kit/ui build`            | Production build of explorer UI only                         |
+| `build`        | `tsc --build && bun run --filter @forecast-kit/ui build` | Compile CLI, API, packages, then explorer UI (pre-push) |
 | `dev:explore`  | `bun run ui`                                         | Alias for `ui`                                               |
 | `sync:kalshi`  | `bun run apps/cli/src/index.tsx sync kalshi --no-ui` | Non-interactive Kalshi sync                                  |
 | `db:generate`  | `drizzle-kit generate`                               | Generate migration from schema changes                       |
@@ -191,7 +192,7 @@ bun run lint
 bun run test
 ```
 
-**Before commit or push:** all four quality checks (`format`, `typecheck`, `lint`, `test`) must pass. Do not push to the remote if any check fails.
+**Before commit or push:** run `bun run build` plus the four quality checks (`format`, `typecheck`, `lint`, `test`); all must pass. Do not push to the remote if any check fails.
 
 ### First Success Criteria (Phase 3 exit gate)
 
@@ -456,6 +457,6 @@ Phases 1–5 are complete (v0.5.0). Post-MVP work: implement Polymarket fetch pe
 
 - Repo bootstrapped at `/Users/tjeastmond/Projects/forecast-kit` with `Project_Plan.md` copied from sibling `forecastkit.dev`.
 - GitHub repository is `tjeastmond/forecast-kit` (renamed from `forcast-kit`).
-- GitHub Actions CI (`.github/workflows/ci.yml`) runs `format:check`, `typecheck`, `lint`, and `test` on push/PR to `main`, plus a separate Build job that also runs those checks and `ui:build`.
+- GitHub Actions CI (`.github/workflows/ci.yml`) runs `format:check`, `typecheck`, `lint`, and `test` on push/PR to `main`, plus a separate **Build** job that runs `format:check`, `lint`, and `bun run build`.
 - Post-MVP polish is complete; `.ai/handoff-remaining.md` lists done items and explicit out-of-scope work; track bugs in `.ai/issues.md`.
 - Sibling design reference **applied.dev** lives at `/Users/tjeastmond/Projects/applied.dev` (Next.js 15, shadcn, card-based list UI).
