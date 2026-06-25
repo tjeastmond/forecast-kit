@@ -16,6 +16,7 @@
     "serve": "bun run apps/api/src/index.ts",
     "ui:app": "bun run --filter @forecast-kit/ui dev",
     "ui": "bun run scripts/dev-explore.ts",
+    "build": "tsc --build && bun run --filter @forecast-kit/ui build",
     "ui:build": "bun run --filter @forecast-kit/ui build",
     "dev:explore": "bun run ui",
     "sync:kalshi": "bun run apps/cli/src/index.tsx sync kalshi --no-ui",

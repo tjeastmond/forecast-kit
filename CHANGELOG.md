@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Root `build` script compiles CLI, API, and workspace packages via `tsc --build`, then builds the explorer UI; CI **Build** job runs `bun run build`
 - `@forecast-kit/types` workspace package (zero runtime deps) as the shared source for `Focus`, `FOCUS_VALUES`, and `MarketExportV1`
-- GitHub Actions **Build** job (`format:check`, `lint`, `typecheck`, `ui:build`) on push to `main` and pull requests
+- GitHub Actions **Build** job (`format:check`, `lint`, `build`) on push to `main` and pull requests
 - MIT License (`LICENSE`) at repo root
 
 ### Changed
