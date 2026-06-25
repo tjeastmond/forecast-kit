@@ -15,7 +15,7 @@ export function CopyIdRow({
   onCopy: (id: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-1">
+    <span className="inline-flex items-center gap-1">
       {label ? <span className="text-muted-foreground">{label}</span> : null}
       <span className="text-muted-foreground font-mono text-xs">{id}</span>
       <Button
@@ -29,6 +29,6 @@ export function CopyIdRow({
       >
         <CopyIcon className="size-3.5" />
       </Button>
-    </div>
+    </span>
   );
 }
